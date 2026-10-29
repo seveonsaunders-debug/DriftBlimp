@@ -8,9 +8,9 @@ face_cascade = cv2.CascadeClassifier(
     cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
 )
 
-# 物体検出モデル（YOLOv8 nano：軽量・COCOの80クラスを認識）
+# 物体検出モデル（YOLOv12s ：軽量・COCOの80クラスを認識）
 # 初回実行時に自動でダウンロードされます
-yolo = YOLO('yolov8n.pt')
+yolo = YOLO('yolov12s.pt')
 CONF_THRESHOLD = 0.5  # 信頼度がこれ未満の検出は無視
 
 # PCのカメラを起動（0番が内蔵カメラ）
