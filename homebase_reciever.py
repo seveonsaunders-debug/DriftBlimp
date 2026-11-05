@@ -66,21 +66,6 @@ def receive_image():
     return jsonify(status="received"), 200
 
 
-# ----------------------------------
-# 3. Return detection status to sender
-# ----------------------------------
-
-@app.route("/status", methods=["GET"])
-def get_status():
-
-    with status_lock:
-        return jsonify(detection_status), 200
-
-
-# ----------------------------------
-# 4. Start Flask server
-# ----------------------------------
-
 def start_server():
     app.run(
         host="0.0.0.0",
