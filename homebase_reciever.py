@@ -11,15 +11,27 @@ from flask import Flask, request, jsonify
 from ultralytics import YOLO
 
 # ----------------------------------
-# Network receiver setup
+# 1. Network receiver setup
 # ----------------------------------
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024
 
+# Shared detection status
+status_lock = threading.Lock()
+
+detection_status = {
+    "event_id": 0,
+    "target_found": False
+}
+
 # Keep only the newest unprocessed image
 image_queue = Queue(maxsize=1)
 
+
+# ----------------------------------
+# 2. Receive images from blimp
+# ----------------------------------
 
 @app.route("/upload", methods=["POST"])
 def receive_image():
@@ -54,6 +66,21 @@ def receive_image():
     return jsonify(status="received"), 200
 
 
+# ----------------------------------
+# 3. Return detection status to sender
+# ----------------------------------
+
+@app.route("/status", methods=["GET"])
+def get_status():
+
+    with status_lock:
+        return jsonify(detection_status), 200
+
+
+# ----------------------------------
+# 4. Start Flask server
+# ----------------------------------
+
 def start_server():
     app.run(
         host="0.0.0.0",
@@ -64,7 +91,7 @@ def start_server():
 
 
 # ----------------------------------
-# Load object and face detection
+# 5. Load object and face detection
 # ----------------------------------
 
 face_cascade = cv2.CascadeClassifier(
@@ -93,8 +120,9 @@ available_classes = [
 print("Available YOLO classes:")
 print(fill(", ".join(available_classes), width=88))
 
+
 # ----------------------------------
-# Choose target object
+# 6. Choose target object
 # ----------------------------------
 
 while True:
@@ -112,8 +140,9 @@ while True:
 
     print("Invalid class name. Try bottle, cup, etc.")
 
+
 # ----------------------------------
-# Set confidence threshold
+# 7. Set confidence threshold
 # ----------------------------------
 
 while True:
@@ -135,8 +164,9 @@ while True:
 
     print("Enter a number between 0 and 100.")
 
+
 # ----------------------------------
-# Start HTTP server in background
+# 8. Start HTTP server in background
 # ----------------------------------
 
 server_thread = threading.Thread(
@@ -154,15 +184,18 @@ print("Press Q to quit")
 show_other_objects = False
 target_was_found = False
 
+
 # ----------------------------------
-# Process incoming images
+# 9. Process incoming images
 # ----------------------------------
 
 while True:
 
     try:
         frame = image_queue.get(timeout=0.1)
+
     except Empty:
+
         # Keep window responsive while waiting
         key = cv2.waitKey(1) & 0xFF
 
@@ -176,7 +209,7 @@ while True:
         continue
 
     # ----------------------------------
-    # YOLO object detection
+    # 10. YOLO object detection
     # ----------------------------------
 
     results = yolo(frame, verbose=False)[0]
@@ -232,14 +265,33 @@ while True:
         object_count += 1
 
     # ----------------------------------
-    # Target identification
+    # 11. Target identification
     # ----------------------------------
 
     target_found = (
         target_confidence >= confidence_threshold
     )
 
+    # Update shared status for Computer 1
+    with status_lock:
+
+        detection_status["target_found"] = target_found
+
+        # Increment event only when target
+        # changes from NOT FOUND to FOUND
+        if target_found and not target_was_found:
+
+            detection_status["event_id"] += 1
+
+            print(
+                "Detection event:",
+                detection_status["event_id"]
+            )
+
+    # Print detection message only once
+    # per new target detection
     if target_found and not target_was_found:
+
         print(
             f"Found {target_name} at "
             f"{target_confidence * 100:.1f}%"
@@ -248,7 +300,7 @@ while True:
     target_was_found = target_found
 
     # ----------------------------------
-    # Face detection
+    # 12. Face detection
     # ----------------------------------
 
     gray = cv2.cvtColor(
@@ -282,7 +334,7 @@ while True:
         )
 
     # ----------------------------------
-    # Display detection information
+    # 13. Display detection information
     # ----------------------------------
 
     status = (
@@ -325,6 +377,11 @@ while True:
 
     elif key == ord("q"):
         break
+
+
+# ----------------------------------
+# 14. Clean up
+# ----------------------------------
 
 cv2.destroyAllWindows()
 print("DriftBlimp homebase stopped")

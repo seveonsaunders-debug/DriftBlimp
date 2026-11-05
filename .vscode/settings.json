@@ -1,3 +1,4 @@
 {
-    "inlineChat.affordance": "editor"
+    "inlineChat.affordance": "editor",
+    "python-envs.defaultEnvManager": "ms-python.python:system"
 }
