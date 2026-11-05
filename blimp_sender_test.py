@@ -20,7 +20,7 @@ HOMEBASE_URL = "http://10.46.19.22:5000"
 CAMERA_INDEX = 0
 
 # How frequently to check YOLO status
-STATUS_INTERVAL = 0.5
+STATUS_INTERVAL = 2.0
 
 # Audio alert settings
 BEEP_FREQUENCY = 1500   # Hz
