@@ -1,0 +1,14 @@
+task: detect
+name: elastic-robin
+description: pictures of my glasses
+bytes: 17045354
+url: https://platform.ultralytics.com/cerebralcortex/datasets/elastic-robin
+version: latest
+created_at: "2026-11-06T21:36:13.025Z"
+updated_at: "2026-11-06T21:58:07.057Z"
+names:
+  0: glasses
+train: images/train
+val: images/val
+hash: c5e850f5
+complete: true

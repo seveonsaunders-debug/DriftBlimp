@@ -12,6 +12,7 @@ face_cascade = cv2.CascadeClassifier(
 # 物体検出モデル（YOLO11n：COCOの80クラスを認識）
 # 初回実行時に自動でダウンロードされます
 yolo = YOLO('yolo11n.pt')
+yolo.train(data="datasets\elastic-robin-c5e850f5\data.yaml", epochs=100, imgsz=640)
 
 if isinstance(yolo.names, dict):
     class_names = yolo.names
