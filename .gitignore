@@ -2,3 +2,4 @@
 __pycache__/
 *.py[cod]
 yolov8n.pt
+active_model.txt

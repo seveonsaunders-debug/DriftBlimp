@@ -8,6 +8,16 @@ import torch
 from ultralytics import YOLO
 
 MAX_RETRIES = 3
+PROJECT_DIRECTORY = Path(__file__).resolve().parent
+DATASET_YAML = (
+    PROJECT_DIRECTORY
+    / 'datasets'
+    / 'elastic-robin2-9bb63ef8'
+    / 'data.yaml'
+)
+RUNS_DIRECTORY = PROJECT_DIRECTORY / 'detect'
+ACTIVE_MODEL_FILE = PROJECT_DIRECTORY / 'active_model.txt'
+BASE_MODEL = PROJECT_DIRECTORY / 'yolo11n.pt'
 
 
 def keep_recovery_checkpoint(trainer):
@@ -28,9 +38,9 @@ def keep_recovery_checkpoint(trainer):
 
 def find_interrupted_run(dataset_yaml, runs_directory):
     run_directories = [
-        path for path in runs_directory.glob('train*')
+        path for path in runs_directory.iterdir()
         if path.is_dir()
-    ]
+    ] if runs_directory.is_dir() else []
     run_directories.sort(
         key=lambda path: max(
             (checkpoint.stat().st_mtime for checkpoint in (
@@ -85,6 +95,9 @@ def find_interrupted_run(dataset_yaml, runs_directory):
 
 
 def main():
+    if not DATASET_YAML.is_file():
+        raise FileNotFoundError(f'Dataset configuration not found: {DATASET_YAML}')
+
     if not torch.cuda.is_available():
         raise RuntimeError(
             'CUDA training was requested, but CUDA is unavailable in this Python '
@@ -92,17 +105,9 @@ def main():
         )
 
     print(f'Training on CUDA device: {torch.cuda.get_device_name(0)}')
-    dataset_yaml = (
-        Path(__file__).resolve().parent
-        / 'DriftBlimp'
-        / 'datasets'
-        / 'elastic-robin-c5e850f5'
-        / 'data.yaml'
-    )
-    runs_directory = Path(__file__).resolve().parent / 'runs' / 'detect'
-    resume_checkpoint, run_directory = find_interrupted_run(dataset_yaml, runs_directory)
+    resume_checkpoint, run_directory = find_interrupted_run(DATASET_YAML, RUNS_DIRECTORY)
     if resume_checkpoint is None:
-        yolo = YOLO('yolo11n.pt')
+        yolo = YOLO(str(BASE_MODEL))
     else:
         print(f'Resuming unfinished run from {resume_checkpoint}')
         yolo = YOLO(str(resume_checkpoint))
@@ -111,18 +116,25 @@ def main():
     for attempt in range(1, MAX_RETRIES + 2):
         try:
             if resume_checkpoint is None:
-                yolo.train(data=str(dataset_yaml), epochs=100, imgsz=640, device=0)
+                yolo.train(
+                    data=str(DATASET_YAML),
+                    epochs=100,
+                    imgsz=640,
+                    device=0,
+                    project=str(RUNS_DIRECTORY),
+                    name=DATASET_YAML.parent.name,
+                )
             else:
                 print(f'Resuming training from {resume_checkpoint}')
                 yolo = YOLO(str(resume_checkpoint))
                 yolo.add_callback('on_model_save', keep_recovery_checkpoint)
                 yolo.train(
                     resume=str(resume_checkpoint),
-                    data=str(dataset_yaml),
+                    data=str(DATASET_YAML),
                     device=0,
                     save_dir=str(run_directory),
                 )
-            return
+            break
         except Exception as error:
             trainer = getattr(yolo, 'trainer', None)
             if trainer is not None:
@@ -169,6 +181,21 @@ def main():
                 f'({MAX_RETRIES - attempt + 1} retries remaining).'
             )
             time.sleep(5)
+
+    best_checkpoint = Path(yolo.trainer.best).resolve()
+    if not best_checkpoint.is_file():
+        raise FileNotFoundError(
+            f'Training completed without a best checkpoint: {best_checkpoint}'
+        )
+
+    relative_checkpoint = best_checkpoint.relative_to(PROJECT_DIRECTORY)
+    temporary_model_file = ACTIVE_MODEL_FILE.with_suffix('.txt.tmp')
+    temporary_model_file.write_text(
+        relative_checkpoint.as_posix(),
+        encoding='utf-8',
+    )
+    temporary_model_file.replace(ACTIVE_MODEL_FILE)
+    print(f'Active detection model: {best_checkpoint}')
 
 
 if __name__ == '__main__':

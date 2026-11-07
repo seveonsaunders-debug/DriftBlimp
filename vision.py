@@ -3,7 +3,6 @@ from pathlib import Path
 
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"  # cv2 の import より前に書く
 import cv2
-import torch
 from textwrap import fill
 from ultralytics import YOLO  # pip install ultralytics
 
@@ -12,9 +11,21 @@ face_cascade = cv2.CascadeClassifier(
     cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
 )
 
-# 物体検出モデル（YOLO11n：COCOの80クラスを認識）
-# 初回実行時に自動でダウンロードされます
-model_path = Path(__file__).resolve().parent / 'detect' / 'train-2' / 'weights' / 'best.pt'
+# Load the best model from the most recent successful trainer.py run.
+project_directory = Path(__file__).resolve().parent
+active_model_file = project_directory / 'active_model.txt'
+if not active_model_file.is_file():
+    raise FileNotFoundError(
+        f'No trained model is registered at {active_model_file}. '
+        'Set DATASET_YAML in trainer.py, then run trainer.py first.'
+    )
+
+model_path = Path(active_model_file.read_text(encoding='utf-8').strip())
+if not model_path.is_absolute():
+    model_path = project_directory / model_path
+if not model_path.is_file():
+    raise FileNotFoundError(f'Trained model not found: {model_path}')
+
 yolo = YOLO(str(model_path))
 
 if isinstance(yolo.names, dict):
