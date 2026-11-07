@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"  # cv2 の import より前に書く
 import cv2
 from textwrap import fill
@@ -11,8 +12,8 @@ face_cascade = cv2.CascadeClassifier(
 
 # 物体検出モデル（YOLO11n：COCOの80クラスを認識）
 # 初回実行時に自動でダウンロードされます
-yolo = YOLO('yolo11n.pt')
-yolo.train(data="datasets\elastic-robin-c5e850f5\data.yaml", epochs=100, imgsz=640, device=0)
+model_path = Path(__file__).resolve().parent / 'runs' /'detect' / "train-2" / 'weights' / 'best.pt'
+yolo = YOLO(str(model_path))
 
 if isinstance(yolo.names, dict):
     class_names = yolo.names
