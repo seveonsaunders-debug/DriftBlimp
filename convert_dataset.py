@@ -1,3 +1,5 @@
+# Convert NDJSON dataset to YOLO format from Ultralytics
+
 import asyncio
 from ultralytics.data.converter import convert_ndjson_to_yolo
 

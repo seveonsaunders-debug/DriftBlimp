@@ -1,7 +1,9 @@
 import os
 from pathlib import Path
+
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"  # cv2 の import より前に書く
 import cv2
+import torch
 from textwrap import fill
 from ultralytics import YOLO  # pip install ultralytics
 
@@ -14,6 +16,8 @@ face_cascade = cv2.CascadeClassifier(
 # 初回実行時に自動でダウンロードされます
 model_path = Path(__file__).resolve().parent / 'runs' /'detect' / "train-2" / 'weights' / 'best.pt'
 yolo = YOLO(str(model_path))
+=======
+yolo = YOLO('yolo11n.pt')
 
 if isinstance(yolo.names, dict):
     class_names = yolo.names
