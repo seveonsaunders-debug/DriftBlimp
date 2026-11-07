@@ -14,7 +14,7 @@ face_cascade = cv2.CascadeClassifier(
 
 # 物体検出モデル（YOLO11n：COCOの80クラスを認識）
 # 初回実行時に自動でダウンロードされます
-model_path = Path(__file__).resolve().parent.parent / 'runs' / 'detect' / 'train-2' / 'weights' / 'best.pt'
+model_path = Path(__file__).resolve().parent.parent / 'detect' / 'train-2' / 'weights' / 'best.pt'
 yolo = YOLO(str(model_path))
 
 if isinstance(yolo.names, dict):
