@@ -11,7 +11,7 @@ face_cascade = cv2.CascadeClassifier(
     cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
 )
 
-# Load the best model from the most recent successful trainer.py run.
+# Load the checkpoint selected in active_model.txt.
 project_directory = Path(__file__).resolve().parent
 active_model_file = project_directory / 'active_model.txt'
 if not active_model_file.is_file():

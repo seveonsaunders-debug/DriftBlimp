@@ -23,6 +23,17 @@ three retry attempts for training errors. After successful training,
 file. Run `python vision.py` to load that model; the dataset path does not need
 to be changed in `vision.py`.
 
+To select a different existing checkpoint without changing code, edit
+`active_model.txt` and set it to the checkpoint path relative to this
+directory, for example:
+
+```text
+detect/elastic-robin2-9bb63ef8/weights/best.pt
+```
+
+`vision.py` loads the selected checkpoint and uses its class names. The file
+path must point to an existing `.pt` model.
+
 The camera script prints the trained model's class names and prompts for a
 class name and minimum confidence. Matching is case-insensitive and uses the
 model's exact class names. Only detections of the requested item at or above
