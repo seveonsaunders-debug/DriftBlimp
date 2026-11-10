@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DriftBlimp</title>
+<style>
+:root{--bg:#fff;--fg:#000;--card:#eef1f6;--primary:#0a3d91;--on-primary:#fff;--danger:#b00020;--on-danger:#fff;--ok:#0b6b2e;--line:#000;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#000;--fg:#fff;--card:#1a1f2b;--primary:#9cc0ff;--on-primary:#000;--danger:#ff6b7a;--on-danger:#000;--ok:#6fe39a;--line:#fff}}
+:root[data-theme="dark"]{--bg:#000;--fg:#fff;--card:#1a1f2b;--primary:#9cc0ff;--on-primary:#000;--danger:#ff6b7a;--on-danger:#000;--ok:#6fe39a;--line:#fff}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+html{font-size:calc(22px * var(--ts,1));-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--fg);font-family:Verdana,"Segoe UI",Arial,sans-serif;line-height:1.4;display:flex;flex-direction:column;overflow:hidden}
+#top{display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;border-bottom:3px solid var(--line);font-weight:700;gap:1rem}
+#main{flex:1;overflow-y:auto;padding:1rem;max-width:900px;width:100%;margin:0 auto}
+h1{font-size:1.6rem;margin:.3rem 0 1rem}
+h2{font-size:1.25rem;margin:1rem 0 .5rem}
+p{margin:.5rem 0}
+button{font:inherit;font-weight:700;min-height:64px;padding:.7rem 1.2rem;border:3px solid var(--line);border-radius:14px;background:var(--bg);color:var(--fg);width:100%;margin:.5rem 0;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.6rem;text-align:center}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:4px solid var(--primary);outline-offset:3px}
+.pri{background:var(--primary);color:var(--on-primary)}
+.big{min-height:150px;font-size:1.7rem}
+.dng{background:var(--danger);color:var(--on-danger)}
+.row{display:flex;gap:1rem}.row>*{flex:1}
+.card{background:var(--card);border:3px solid var(--line);border-radius:14px;padding:1rem;margin:.6rem 0}
+.item{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.item button{width:auto;margin:0}
+.steps{list-style:none;padding:0;margin:1rem 0}
+.steps li{display:flex;gap:.8rem;align-items:center;padding:.7rem 1rem;border:3px solid var(--line);border-radius:14px;margin:.5rem 0;font-weight:700}
+.steps li.done{background:var(--card)}
+.steps li.now{background:var(--primary);color:var(--on-primary)}
+.steps li.todo{opacity:.65;border-style:dashed}
+.ic{font-size:1.4rem;width:2rem;text-align:center}
+label{display:block;font-weight:700;margin:1rem 0 .3rem}
+input[type=text],select{font:inherit;width:100%;min-height:60px;padding:.5rem 1rem;border:3px solid var(--line);border-radius:14px;background:var(--bg);color:var(--fg)}
+input[type=range]{width:100%;height:50px}
+.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem}
+.photo{border:3px dashed var(--line);border-radius:14px;min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;text-align:center;cursor:pointer;overflow:hidden;padding:.3rem}
+.photo img{width:100%;height:90px;object-fit:cover;border-radius:8px}
+.photo input{display:none}
+.big-msg{font-size:1.6rem;font-weight:700;text-align:center;margin:1rem 0}
+.found{font-size:4rem;text-align:center}
+.map{display:grid;grid-template-columns:repeat(16,1fr);gap:2px;border:3px solid var(--line);padding:4px;border-radius:10px;background:var(--bg)}
+.map i{aspect-ratio:1;background:var(--card);display:block}
+.map i.on{background:var(--primary)}
+.map i.me{background:var(--danger);outline:3px solid var(--fg)}
+.bar{height:26px;border:3px solid var(--line);border-radius:14px;overflow:hidden;margin:.6rem 0}
+.bar div{height:100%;background:var(--ok);width:0}
+#estop{padding:.6rem 1rem;border-top:3px solid var(--line);background:var(--bg)}
+#hold{position:relative;overflow:hidden;min-height:76px;margin:0;font-size:1.3rem;touch-action:none;user-select:none;-webkit-user-select:none;background:var(--danger);color:var(--on-danger);border-color:var(--line)}
+#fill{position:absolute;inset:0 auto 0 0;width:0;background:rgba(0,0,0,.45);pointer-events:none}
+#hold span{position:relative}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;padding:1rem;z-index:50}
+#modal .box{background:var(--bg);color:var(--fg);border:4px solid var(--line);border-radius:18px;padding:1.2rem;max-width:620px;width:100%;max-height:100%;overflow:auto}
+#dim{position:fixed;inset:0;background:#000;pointer-events:none;opacity:0;z-index:40}
+.note{font-size:.85rem}
+</style>
+</head>
+<body>
+<div id="top"><span id="status"></span><span>DriftBlimp</span></div>
+<div id="main"></div>
+<div id="estop"><button id="hold" aria-label="Emergency stop. Press and hold for 2 seconds."><div id="fill"></div><span>⛔ EMERGENCY STOP – press and hold</span></button></div>
+<div id="modal"><div class="box" id="mbox"></div></div>
+<div id="dim"></div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const SEARCH=['Flying to where it was last seen','Scanning the room','Checking camera pictures','Found it!'];
+const RET=['Returning to the dock','Landing on the dock','Charging'];
+const S={screen:'home',items:[
+ {id:1,name:'Keys',cat:'Everyday',photos:[null,null,null]},
+ {id:2,name:'Glasses',cat:'Everyday',photos:[null,null,null]},
+ {id:3,name:'Phone',cat:'Everyday',photos:[null,null,null]},
+ {id:4,name:'TV remote',cat:'Everyday',photos:[null,null,null]},
+ {id:5,name:'Pill box',cat:'Medicine',photos:[null,null,null]}],
+ sel:null,stage:0,ret:0,found:false,paused:null,edit:null,
+ set:{name:'My DriftBlimp',ts:1,dim:0,sound:true,addr:'192.168.1.20'},
+ map:{cells:[],pct:0,run:false,done:false},battery:85,nid:10};
+let timer=null;
+const stop=()=>{clearInterval(timer);timer=null};
+const go=s=>{S.screen=s;render()};
+
+function status(){
+ let t='🟢 Ready';
+ if(S.paused)t='🔴 Stopped';
+ else if(S.screen==='search')t='🔵 Searching';
+ else if(S.screen==='return')t='🔵 Going home';
+ else if(S.screen==='mapping')t='🔵 Mapping';
+ $('#status').textContent=t+'  🔋 '+S.battery+'%';
+}
+function steps(list,cur){
+ return '<ul class="steps">'+list.map((x,i)=>{
+  const c=i<cur?'done':i===cur?'now':'todo';
+  const ic=i<cur?'✔':i===cur?'▶':'○';
+  return `<li class="${c}"><span class="ic">${ic}</span>${x}</li>`}).join('')+'</ul>';
+}
+function back(to,label){return `<button data-go="${to}">← ${label||'Back'}</button>`}
+
+/* ---------- screens ---------- */
+const V={
+home(){return `<h1>${esc(S.set.name)}</h1>
+ <button class="pri big" data-go="pick">🔍 Find an Item</button>
+ <div class="row"><button data-go="items">📦 My Items</button><button data-go="settings">⚙ Settings</button></div>`},
+pick(){return `${back('home')}<h1>What are you looking for?</h1>`+
+ (S.items.length?S.items.map(i=>`<button class="pri" data-find="${i.id}">${esc(i.name)}</button>`).join(''):'<p>No items yet. Add one in My Items.</p>')},
+search(){const it=S.items.find(i=>i.id===S.sel);
+ return `<h1>Looking for: ${esc(it?it.name:'')}</h1>${steps(SEARCH,S.stage)}
+ <p class="note">You do not need to do anything. The blimp will tell you when it finds your item.</p>
+ <button class="pri" data-act="endsearch">🏠 Stop Search and Go Home</button>`},
+return(){const it=S.items.find(i=>i.id===S.sel);
+ let top='';
+ if(S.found&&it)top=`<div class="card"><div class="found">✅</div><div class="big-msg">Your ${esc(it.name.toLowerCase())} ${S.where||'was found'}.</div></div>`;
+ else top='<h1>Going home</h1>';
+ return top+steps(RET,S.ret)+(S.ret>=3?'<button class="pri" data-act="done">OK, Done</button>':'')},
+items(){return `${back('home')}<h1>My Items</h1>`+S.items.map(i=>`<div class="card item"><b>${esc(i.name)}</b><div class="row" style="gap:.5rem"><button data-edit="${i.id}">Edit</button></div></div>`).join('')+
+ '<button class="pri" data-edit="new">➕ Add an Item</button>'},
+edit(){const it=S.edit;
+ return `<h1>${it.isNew?'Add an Item':'Edit Item'}</h1>
+ <label for="nm">Name</label><input type="text" id="nm" value="${esc(it.name)}" placeholder="For example: Car keys">
+ <label for="ct">Type</label><select id="ct">${['Everyday','Medicine','Other'].map(c=>`<option${c===it.cat?' selected':''}>${c}</option>`).join('')}</select>
+ <h2>Take 3 pictures</h2><p class="note">Hold the item close and take a clear picture of each view.</p>
+ <div class="photos">${['Front','Top','Side'].map((l,i)=>`<label class="photo">${it.photos[i]?`<img src="${it.photos[i]}" alt="${l} view">`:'📷'}<span>${l}${it.photos[i]?' ✔':''}</span><input type="file" accept="image/*" capture="environment" data-ph="${i}"></label>`).join('')}</div>
+ <button class="pri" data-act="saveitem">💾 Save Item</button>
+ ${it.isNew?'':'<button data-act="delitem">🗑 Delete Item</button>'}
+ ${back('items','Cancel')}`},
+settings(){const s=S.set;return `${back('home')}<h1>Settings</h1>
+ <label for="sn">Blimp name</label><input type="text" id="sn" value="${esc(s.name)}">
+ <label for="ts">Text size</label><input type="range" id="ts" min="1" max="1.4" step="0.1" value="${s.ts}">
+ <label for="dm">Dim the screen</label><input type="range" id="dm" min="0" max="0.7" step="0.05" value="${s.dim}">
+ <p class="note">To change the iPad’s own brightness, open Control Center and use the sun slider.</p>
+ <button data-act="sound">${s.sound?'🔊 Sounds: ON':'🔇 Sounds: OFF'}</button>
+ <label for="ad">Home base address (caregiver)</label><input type="text" id="ad" value="${esc(s.addr)}">
+ <div class="card">Connection: 🟢 Connected (demo)</div>
+ <h2>Caregiver tools</h2>
+ <button data-go="setup">🗺 Setup Mode: Map the House</button>`},
+setup(){return `${back('settings')}<h1>Setup Mode</h1>
+ <div class="card"><p>This is for a family member or caregiver. The blimp will fly slowly through each room to learn the layout of the house.</p>
+ <p><b>Before you start:</b></p><p>✔ Open the doors<br>✔ Move cords and loose items off the floor<br>✔ Keep pets and people clear</p></div>
+ ${S.map.done?'<div class="card">✔ A map is already saved. Mapping again will replace it.</div>':''}
+ <button class="pri" data-act="startmap">▶ Start Mapping</button>`},
+mapping(){const m=S.map;const cells=[];
+ for(let i=0;i<160;i++)cells.push(`<i class="${i===m.last?'me':m.cells[i]?'on':''}"></i>`);
+ return `<h1>Mapping the house</h1><p>${m.run?'The blimp is flying. Please stay clear.':'Paused.'}</p>
+ <div class="map">${cells.join('')}</div>
+ <div class="bar"><div style="width:${m.pct}%"></div></div><p><b>${m.pct}% mapped</b></p>
+ <button class="pri" data-act="finishmap">✔ Finish and Save</button>
+ <div class="row"><button data-act="pausemap">${m.run?'⏸ Pause':'▶ Resume'}</button><button data-act="cancelmap">✖ Cancel</button></div>`},
+rooms(){return `<h1>Name the rooms</h1><p>Rooms help the blimp say where your item is.</p>
+ ${['Kitchen','Living room','Bedroom'].map((r,i)=>`<label for="r${i}">Room ${i+1}</label><input type="text" id="r${i}" value="${r}">`).join('')}
+ <button class="pri" data-act="saverooms">💾 Save Map</button>`}
+};
+function render(){
+ const f=V[S.screen]||V.home;
+ if(S.screen==='edit'&&!S.edit)S.screen='items';
+ $('#main').innerHTML=(V[S.screen]||V.home)();
+ $('#main').scrollTop=0;status();
+ document.documentElement.style.setProperty('--ts',S.set.ts);
+ $('#dim').style.opacity=S.set.dim;
+}
+
+/* ---------- behaviours ---------- */
+function startSearchTimer(){stop();timer=setInterval(()=>{
+ S.stage++;
+ if(S.stage>=3){stop();S.found=true;S.where='is on the kitchen table';S.stage=3;S.screen='return';S.ret=0;render();setTimeout(()=>{if(S.screen==='return'&&!S.paused)startRetTimer()},1500);return}
+ render()},2500)}
+function startRetTimer(){stop();timer=setInterval(()=>{S.ret++;if(S.ret>=3){stop()}render()},2500)}
+function beginReturn(found){S.found=found;S.ret=0;S.screen='return';render();startRetTimer()}
+function startMapTimer(){stop();S.map.run=true;timer=setInterval(()=>{
+ const m=S.map;if(m.pct>=100){stop();m.run=false;render();return}
+ m.pct=Math.min(100,m.pct+4);
+ const n=Math.floor(m.pct*1.6);
+ for(let i=0;i<n;i++)m.cells[(Math.floor(i/16)%2===0)?i:Math.floor(i/16)*16+15-(i%16)]=1;
+ m.last=Math.max(0,n-1);render()},700)}
+
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-go],[data-find],[data-edit],[data-act]');if(!b)return;
+ if(b.dataset.go){go(b.dataset.go)}
+ else if(b.dataset.find){S.sel=+b.dataset.find;S.stage=0;S.found=false;S.screen='search';render();startSearchTimer()}
+ else if(b.dataset.edit){const id=b.dataset.edit;
+  S.edit=id==='new'?{isNew:true,name:'',cat:'Everyday',photos:[null,null,null]}:JSON.parse(JSON.stringify(S.items.find(i=>i.id==id)));go('edit')}
+ else act(b.dataset.act);
+});
+function act(a){
+ if(a==='endsearch'){beginReturn(false)}
+ else if(a==='done'){S.found=false;go('home')}
+ else if(a==='saveitem'){const it=S.edit;it.name=($('#nm').value||'').trim()||'New item';it.cat=$('#ct').value;
+  if(it.isNew){delete it.isNew;it.id=S.nid++;S.items.push(it)}else S.items=S.items.map(i=>i.id===it.id?it:i);
+  S.edit=null;go('items')}
+ else if(a==='delitem'){if(confirm('Delete this item?')){S.items=S.items.filter(i=>i.id!==S.edit.id);S.edit=null;go('items')}}
+ else if(a==='sound'){S.set.sound=!S.set.sound;render()}
+ else if(a==='startmap'){S.map={cells:[],pct:0,run:false,done:S.map.done,last:-1};S.screen='mapping';render();startMapTimer()}
+ else if(a==='pausemap'){if(S.map.run){stop();S.map.run=false}else startMapTimer();render()}
+ else if(a==='cancelmap'){stop();S.map.run=false;go('setup')}
+ else if(a==='finishmap'){stop();S.map.run=false;go('rooms')}
+ else if(a==='saverooms'){S.map.done=true;go('settings')}
+}
+document.addEventListener('input',e=>{const t=e.target;
+ if(t.id==='ts'){S.set.ts=+t.value;document.documentElement.style.setProperty('--ts',t.value)}
+ else if(t.id==='dm'){S.set.dim=+t.value;$('#dim').style.opacity=t.value}
+ else if(t.id==='sn')S.set.name=t.value;
+ else if(t.id==='ad')S.set.addr=t.value;
+ else if(t.id==='nm'&&S.edit)S.edit.name=t.value;
+});
+document.addEventListener('change',e=>{const t=e.target;
+ if(t.id==='ct'&&S.edit)S.edit.cat=t.value;
+ if(t.dataset&&t.dataset.ph!==undefined&&t.files[0]&&S.edit){
+  const i=+t.dataset.ph,r=new FileReader();
+  r.onload=()=>{S.edit.photos[i]=r.result;S.edit.name=($('#nm')||{}).value||S.edit.name;render()};
+  r.readAsDataURL(t.files[0])}
+});
+
+/* ---------- emergency stop ---------- */
+const hold=$('#hold'),fill=$('#fill');let t0=0,hi=null;
+function cancelHold(){clearInterval(hi);hi=null;fill.style.width='0'}
+hold.addEventListener('pointerdown',e=>{e.preventDefault();if(hi)return;t0=Date.now();
+ hi=setInterval(()=>{const p=Math.min(1,(Date.now()-t0)/2000);fill.style.width=p*100+'%';
+  if(p>=1){cancelHold();confirmStop()}},40)});
+['pointerup','pointerleave','pointercancel'].forEach(ev=>hold.addEventListener(ev,cancelHold));
+hold.addEventListener('contextmenu',e=>e.preventDefault());
+function modal(html){$('#mbox').innerHTML=html;$('#modal').style.display='flex'}
+function closeModal(){$('#modal').style.display='none'}
+function confirmStop(){modal(`<h1>Stop the blimp?</h1><p>It will stop moving and hold still.</p>
+ <button class="dng" id="yes">⛔ Yes, Stop Now</button><button id="no">No, Keep Going</button>`);
+ $('#yes').onclick=doStop;$('#no').onclick=closeModal}
+function doStop(){stop();S.paused={screen:S.screen,map:S.map.run};if(S.map.run)S.map.run=false;status();
+ modal(`<h1>🔴 Blimp stopped</h1><p>It is holding still. What would you like to do?</p>
+ <button class="pri" id="rh">🏠 Return Home (recommended)</button>
+ <button id="rs">▶ Resume</button><button id="po">⏻ Power Off Blimp</button>`);
+ $('#rh').onclick=()=>{closeModal();S.paused=null;beginReturn(false)};
+ $('#rs').onclick=()=>{const p=S.paused;S.paused=null;closeModal();
+  if(p.screen==='search')startSearchTimer();else if(p.screen==='return'&&S.ret<3)startRetTimer();else if(p.screen==='mapping'&&p.map)startMapTimer();render()};
+ $('#po').onclick=()=>{S.paused=null;closeModal();S.found=false;go('home');
+  modal(`<h1>Blimp is off</h1><p>Place it on the dock and turn it on to use it again.</p><button class="pri" id="ok">OK</button>`);$('#ok').onclick=closeModal}}
+render();
+</script>
+</body>
+</html>
