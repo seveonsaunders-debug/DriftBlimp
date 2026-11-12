@@ -1,8 +1,20 @@
 
 import os
+from pathlib import Path
 os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 
-import cv2
+try:
+    import cv2
+except ModuleNotFoundError:
+    cv2 = None
+
+if cv2 is None:
+    raise RuntimeError(
+        "OpenCV (cv2) is required for this receiver. "
+        "Install the GUI-enabled package in the active Python environment, "
+        "e.g. `pip install opencv-python`."
+    )
+
 import numpy as np
 import threading
 from queue import Queue, Empty
@@ -93,7 +105,17 @@ face_cascade = cv2.CascadeClassifier(
     "haarcascade_frontalface_default.xml"
 )
 
-yolo = YOLO("yolo11n.pt")
+model_path = (
+    Path(__file__).resolve().parent
+    / "detect"
+    / "train-2"
+    / "weights"
+    / "best.pt"
+)
+if not model_path.is_file():
+    raise FileNotFoundError(f"Trained model not found: {model_path}")
+
+yolo = YOLO(str(model_path))
 
 class_names = (
     yolo.names
@@ -177,6 +199,7 @@ print("Press Q to quit")
 
 show_other_objects = False
 target_was_found = False
+display_window_open = False
 
 
 # ----------------------------------
@@ -189,8 +212,10 @@ while True:
         frame = image_queue.get(timeout=0.1)
 
     except Empty:
+        # waitKey requires a HighGUI window, which is created by the first imshow.
+        if not display_window_open:
+            continue
 
-        # Keep window responsive while waiting
         key = cv2.waitKey(1) & 0xFF
 
         if key == ord("q"):
@@ -362,6 +387,7 @@ while True:
         "DriftBlimp Homebase Detection",
         frame
     )
+    display_window_open = True
 
     key = cv2.waitKey(1) & 0xFF
 

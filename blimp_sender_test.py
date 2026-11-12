@@ -14,7 +14,7 @@ ARDUINO_PORT = "COM8"
 BAUD_RATE = 19200
 
 # Homebase PC IP address
-HOMEBASE_URL = "http://10.46.19.22:5000"
+HOMEBASE_URL = "http://10.46.4.19:5000"
 
 # USB camera index
 CAMERA_INDEX = 0
