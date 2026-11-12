@@ -31,10 +31,17 @@ app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024
 
 # Shared detection status
 status_lock = threading.Lock()
+target_lock = threading.Lock()
 
 detection_status = {
     "event_id": 0,
     "target_found": False
+}
+
+target = {
+    "class_id": None,
+    "name": None,
+    "conf": 0.5
 }
 
 # Keep only the newest unprocessed image
@@ -137,48 +144,40 @@ print("Available YOLO classes:")
 print(fill(", ".join(available_classes), width=88))
 
 
-# ----------------------------------
-# 6. Choose target object
-# ----------------------------------
-
-while True:
-    target_input = input(
-        "Item to find: "
-    ).strip()
-
-    target_match = classes_by_name.get(
-        " ".join(target_input.casefold().split())
-    )
-
-    if target_match:
-        target_class_id, target_name = target_match
-        break
-
-    print("Invalid class name. Try bottle, cup, etc.")
+@app.route("/classes", methods=["GET"])
+def get_classes():
+    return jsonify(available_classes), 200
 
 
-# ----------------------------------
-# 7. Set confidence threshold
-# ----------------------------------
+@app.route("/target", methods=["POST"])
+def set_target():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify(error="Expected a JSON object"), 400
 
-while True:
-    threshold_input = input(
-        "Minimum confidence (0-100%, default 50): "
-    ).strip()
+    key = " ".join(str(data.get("name", "")).casefold().split())
+    match = classes_by_name.get(key)
+    if not match:
+        return jsonify(error="Unknown class"), 400
 
     try:
-        confidence_threshold = (
-            float(threshold_input) / 100
-            if threshold_input else 0.5
+        confidence = float(data.get("confidence", 0.5))
+    except (TypeError, ValueError):
+        return jsonify(error="Confidence must be a number between 0 and 1"), 400
+
+    if not 0 <= confidence <= 1:
+        return jsonify(error="Confidence must be a number between 0 and 1"), 400
+
+    with target_lock:
+        target.update(
+            class_id=match[0],
+            name=match[1],
+            conf=confidence
         )
-    except ValueError:
-        print("Enter a valid number.")
-        continue
+        with status_lock:
+            detection_status["target_found"] = False
 
-    if 0 <= confidence_threshold <= 1:
-        break
-
-    print("Enter a number between 0 and 100.")
+    return jsonify(status="ok", target=match[1]), 200
 
 
 # ----------------------------------
@@ -193,12 +192,13 @@ server_thread = threading.Thread(
 server_thread.start()
 
 print("Homebase ready to receive images")
-print(f"Looking for: {target_name}")
+print("Waiting for a target from the UI or POST /target")
 print("Press O to toggle other objects")
 print("Press Q to quit")
 
 show_other_objects = False
 target_was_found = False
+previous_target = (None, None, None)
 display_window_open = False
 
 
@@ -235,6 +235,19 @@ while True:
 
     object_count = 0
     target_confidence = 0.0
+    with target_lock:
+        target_class_id = target["class_id"]
+        target_name = target["name"]
+        confidence_threshold = target["conf"]
+
+    frame_target = (
+        target_class_id,
+        target_name,
+        confidence_threshold
+    )
+    if frame_target != previous_target:
+        target_was_found = False
+        previous_target = frame_target
 
     for box in results.boxes:
 
@@ -244,7 +257,10 @@ while True:
             continue
 
         class_id = int(box.cls[0])
-        is_target = class_id == target_class_id
+        is_target = (
+            target_name is not None
+            and class_id == target_class_id
+        )
 
         if is_target:
             target_confidence = max(
@@ -288,35 +304,36 @@ while True:
     # ----------------------------------
 
     target_found = (
-        target_confidence >= confidence_threshold
+        target_name is not None
+        and target_confidence >= confidence_threshold
     )
 
-    # Update shared status for Computer 1
-    with status_lock:
+    target_event = False
+    with target_lock:
+        current_target = (
+            target["class_id"],
+            target["name"],
+            target["conf"]
+        )
+        if current_target == frame_target:
+            with status_lock:
+                detection_status["target_found"] = target_found
 
-        detection_status["target_found"] = target_found
+                if target_found and not target_was_found:
+                    detection_status["event_id"] += 1
+                    target_event = True
+                    print(
+                        "Detection event:",
+                        detection_status["event_id"]
+                    )
 
-        # Increment event only when target
-        # changes from NOT FOUND to FOUND
-        if target_found and not target_was_found:
+            target_was_found = target_found
 
-            detection_status["event_id"] += 1
-
-            print(
-                "Detection event:",
-                detection_status["event_id"]
-            )
-
-    # Print detection message only once
-    # per new target detection
-    if target_found and not target_was_found:
-
+    if target_event and target_name is not None:
         print(
             f"Found {target_name} at "
             f"{target_confidence * 100:.1f}%"
         )
-
-    target_was_found = target_found
 
     # ----------------------------------
     # 12. Face detection
@@ -360,7 +377,11 @@ while True:
         f"Found {target_name}: "
         f"{target_confidence * 100:.1f}%"
         if target_found
-        else f"Searching for {target_name}"
+        else (
+            f"Searching for {target_name}"
+            if target_name is not None
+            else "Waiting for target selection"
+        )
     )
 
     cv2.putText(
