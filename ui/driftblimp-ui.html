@@ -79,6 +79,11 @@ const S={screen:'home',items:[
  set:{name:'My DriftBlimp',ts:1,dim:0,sound:true,addr:'192.168.1.20'},
  map:{cells:[],pct:0,run:false,done:false},battery:85,nid:10};
 let timer=null;
+const LIVE={on:false,ok:true,demo:true,last:undefined,classes:[]};
+async function api(p,body){const r=await fetch('/api'+p,{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
+ if(!r.ok){let m='Something went wrong.';try{m=(await r.json()).detail||m}catch(e){}throw new Error(m)}return r.json()}
+function notice(t,m){modal(`<h1>${esc(t)}</h1><p>${esc(m)}</p><button class="pri" id="ok">OK</button>`);$('#ok').onclick=closeModal}
+function fillMap(){const m=S.map,n=Math.floor(m.pct*1.6);for(let i=0;i<n;i++)m.cells[(Math.floor(i/16)%2===0)?i:Math.floor(i/16)*16+15-(i%16)]=1;m.last=Math.max(0,n-1)}
 const stop=()=>{clearInterval(timer);timer=null};
 const go=s=>{S.screen=s;render()};
 
@@ -88,7 +93,7 @@ function status(){
  else if(S.screen==='search')t='🔵 Searching';
  else if(S.screen==='return')t='🔵 Going home';
  else if(S.screen==='mapping')t='🔵 Mapping';
- $('#status').textContent=t+'  🔋 '+S.battery+'%';
+ $('#status').textContent=(LIVE.on&&!LIVE.ok?'⚠ No connection to the home base':t+'  🔋 '+S.battery+'%')+(LIVE.on&&!LIVE.demo?'':'  (demo)');
 }
 function steps(list,cur){
  return '<ul class="steps">'+list.map((x,i)=>{
@@ -118,7 +123,7 @@ items(){return `${back('home')}<h1>My Items</h1>`+S.items.map(i=>`<div class="ca
  '<button class="pri" data-edit="new">➕ Add an Item</button>'},
 edit(){const it=S.edit;
  return `<h1>${it.isNew?'Add an Item':'Edit Item'}</h1>
- <label for="nm">Name</label><input type="text" id="nm" value="${esc(it.name)}" placeholder="For example: Car keys">
+ <label for="nm">Name</label><input type="text" id="nm" value="${esc(it.name)}" placeholder="For example: Car keys" list="cls"><datalist id="cls">${LIVE.classes.map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
  <label for="ct">Type</label><select id="ct">${['Everyday','Medicine','Other'].map(c=>`<option${c===it.cat?' selected':''}>${c}</option>`).join('')}</select>
  <h2>Take 3 pictures</h2><p class="note">Hold the item close and take a clear picture of each view.</p>
  <div class="photos">${['Front','Top','Side'].map((l,i)=>`<label class="photo">${it.photos[i]?`<img src="${it.photos[i]}" alt="${l} view">`:'📷'}<span>${l}${it.photos[i]?' ✔':''}</span><input type="file" accept="image/*" capture="environment" data-ph="${i}"></label>`).join('')}</div>
@@ -146,7 +151,7 @@ mapping(){const m=S.map;const cells=[];
  <div class="map">${cells.join('')}</div>
  <div class="bar"><div style="width:${m.pct}%"></div></div><p><b>${m.pct}% mapped</b></p>
  <button class="pri" data-act="finishmap">✔ Finish and Save</button>
- <div class="row"><button data-act="pausemap">${m.run?'⏸ Pause':'▶ Resume'}</button><button data-act="cancelmap">✖ Cancel</button></div>`},
+ <div class="row">${LIVE.on?'':`<button data-act="pausemap">${m.run?'⏸ Pause':'▶ Resume'}</button>`}<button data-act="cancelmap">✖ Cancel</button></div>`},
 rooms(){return `<h1>Name the rooms</h1><p>Rooms help the blimp say where your item is.</p>
  ${['Kitchen','Living room','Bedroom'].map((r,i)=>`<label for="r${i}">Room ${i+1}</label><input type="text" id="r${i}" value="${r}">`).join('')}
  <button class="pri" data-act="saverooms">💾 Save Map</button>`}
@@ -166,7 +171,7 @@ function startSearchTimer(){stop();timer=setInterval(()=>{
  if(S.stage>=3){stop();S.found=true;S.where='is on the kitchen table';S.stage=3;S.screen='return';S.ret=0;render();setTimeout(()=>{if(S.screen==='return'&&!S.paused)startRetTimer()},1500);return}
  render()},2500)}
 function startRetTimer(){stop();timer=setInterval(()=>{S.ret++;if(S.ret>=3){stop()}render()},2500)}
-function beginReturn(found){S.found=found;S.ret=0;S.screen='return';render();startRetTimer()}
+function beginReturn(found){S.found=found;S.ret=0;S.screen='return';render();if(LIVE.on){LIVE.last='RETURNING';api('/return_home',{}).catch(e=>notice('Problem',e.message))}else startRetTimer()}
 function startMapTimer(){stop();S.map.run=true;timer=setInterval(()=>{
  const m=S.map;if(m.pct>=100){stop();m.run=false;render();return}
  m.pct=Math.min(100,m.pct+4);
@@ -177,7 +182,10 @@ function startMapTimer(){stop();S.map.run=true;timer=setInterval(()=>{
 document.addEventListener('click',e=>{
  const b=e.target.closest('[data-go],[data-find],[data-edit],[data-act]');if(!b)return;
  if(b.dataset.go){go(b.dataset.go)}
- else if(b.dataset.find){S.sel=+b.dataset.find;S.stage=0;S.found=false;S.screen='search';render();startSearchTimer()}
+ else if(b.dataset.find){S.sel=+b.dataset.find;S.stage=0;S.found=false;
+  if(LIVE.on){const it=S.items.find(i=>i.id===S.sel);
+   api('/search',{item_id:S.sel,name:it.name}).then(()=>{LIVE.last='SEARCHING';S.where=null;S.screen='search';render()}).catch(err=>notice('Can’t start the search',err.message))}
+  else{S.screen='search';render();startSearchTimer()}}
  else if(b.dataset.edit){const id=b.dataset.edit;
   S.edit=id==='new'?{isNew:true,name:'',cat:'Everyday',photos:[null,null,null]}:JSON.parse(JSON.stringify(S.items.find(i=>i.id==id)));go('edit')}
  else act(b.dataset.act);
@@ -190,10 +198,11 @@ function act(a){
   S.edit=null;go('items')}
  else if(a==='delitem'){if(confirm('Delete this item?')){S.items=S.items.filter(i=>i.id!==S.edit.id);S.edit=null;go('items')}}
  else if(a==='sound'){S.set.sound=!S.set.sound;render()}
- else if(a==='startmap'){S.map={cells:[],pct:0,run:false,done:S.map.done,last:-1};S.screen='mapping';render();startMapTimer()}
+ else if(a==='startmap'){S.map={cells:[],pct:0,run:false,done:S.map.done,last:-1};S.screen='mapping';render();
+  if(LIVE.on){LIVE.last='MAPPING';S.map.run=true;api('/setup/start',{}).catch(e=>notice('Problem',e.message))}else startMapTimer()}
  else if(a==='pausemap'){if(S.map.run){stop();S.map.run=false}else startMapTimer();render()}
- else if(a==='cancelmap'){stop();S.map.run=false;go('setup')}
- else if(a==='finishmap'){stop();S.map.run=false;go('rooms')}
+ else if(a==='cancelmap'){stop();S.map.run=false;if(LIVE.on){LIVE.last='IDLE';api('/setup/finish',{})}go('setup')}
+ else if(a==='finishmap'){stop();S.map.run=false;if(LIVE.on){LIVE.last='IDLE';api('/setup/finish',{})}go('rooms')}
  else if(a==='saverooms'){S.map.done=true;go('settings')}
 }
 document.addEventListener('input',e=>{const t=e.target;
@@ -224,15 +233,31 @@ function closeModal(){$('#modal').style.display='none'}
 function confirmStop(){modal(`<h1>Stop the blimp?</h1><p>It will stop moving and hold still.</p>
  <button class="dng" id="yes">⛔ Yes, Stop Now</button><button id="no">No, Keep Going</button>`);
  $('#yes').onclick=doStop;$('#no').onclick=closeModal}
-function doStop(){stop();S.paused={screen:S.screen,map:S.map.run};if(S.map.run)S.map.run=false;status();
+function doStop(){stop();if(LIVE.on){LIVE.last='ESTOPPED';api('/estop',{}).catch(e=>notice('The stop may not have worked',e.message))}S.paused={screen:S.screen,map:S.map.run};if(S.map.run)S.map.run=false;status();
  modal(`<h1>🔴 Blimp stopped</h1><p>It is holding still. What would you like to do?</p>
  <button class="pri" id="rh">🏠 Return Home (recommended)</button>
  <button id="rs">▶ Resume</button><button id="po">⏻ Power Off Blimp</button>`);
  $('#rh').onclick=()=>{closeModal();S.paused=null;beginReturn(false)};
  $('#rs').onclick=()=>{const p=S.paused;S.paused=null;closeModal();
-  if(p.screen==='search')startSearchTimer();else if(p.screen==='return'&&S.ret<3)startRetTimer();else if(p.screen==='mapping'&&p.map)startMapTimer();render()};
- $('#po').onclick=()=>{S.paused=null;closeModal();S.found=false;go('home');
+  if(LIVE.on){LIVE.last=null;api('/resume',{}).catch(e=>notice('Problem',e.message))}else if(p.screen==='search')startSearchTimer();else if(p.screen==='return'&&S.ret<3)startRetTimer();else if(p.screen==='mapping'&&p.map)startMapTimer();render()};
+ $('#po').onclick=()=>{S.paused=null;if(LIVE.on){LIVE.last='IDLE';api('/power_off',{})}closeModal();S.found=false;go('home');
   modal(`<h1>Blimp is off</h1><p>Place it on the dock and turn it on to use it again.</p><button class="pri" id="ok">OK</button>`);$('#ok').onclick=closeModal}}
+async function poll(){
+ try{const d=await api('/status');LIVE.ok=true;LIVE.demo=d.demo;S.battery=d.battery;
+  const first=LIVE.last===undefined;
+  if(d.mode!==LIVE.last){LIVE.last=d.mode;
+   if(d.mode==='SEARCHING')S.screen='search';
+   else if((d.mode==='RETURNING'||d.mode==='DOCKED')&&!first)S.screen='return';
+   else if(d.mode==='MAPPING'){S.screen='mapping';S.map.run=true}
+   else if(d.mode==='ESTOPPED'&&!S.paused)doStop()}
+  if(d.mode==='SEARCHING')S.stage=d.stage;
+  if(d.mode==='RETURNING'||d.mode==='DOCKED'){S.ret=d.mode==='DOCKED'?3:d.stage;if(d.found&&!S.found){S.found=true;S.where=null}}
+  if(d.mode==='MAPPING'){S.map.pct=d.map_pct;fillMap()}
+  if(['search','return','mapping'].includes(S.screen))render();else status();
+ }catch(e){LIVE.ok=false;status()}}
+(async()=>{try{const d=await api('/status');LIVE.on=true;LIVE.demo=d.demo;
+ try{LIVE.classes=await api('/classes')}catch(e){}
+ render();setInterval(poll,1000)}catch(e){}})();
 render();
 </script>
 </body>
