@@ -8,11 +8,11 @@ import torch
 from ultralytics import YOLO
 
 MAX_RETRIES = 3
-PROJECT_DIRECTORY = Path(__file__).resolve().parent
+PROJECT_DIRECTORY = Path(__file__).resolve()
 DATASET_YAML = (
     PROJECT_DIRECTORY
     / 'datasets'
-    / 'elastic-robin2-9bb63ef8'
+    / 'peaceful-heron-efbc868e'
     / 'data.yaml'
 )
 RUNS_DIRECTORY = PROJECT_DIRECTORY / 'detect'
