@@ -9,7 +9,7 @@
  */
 
 // CHANGE THIS to adjust capture frequency
-const unsigned long CAPTURE_INTERVAL = 1000;
+const unsigned long CAPTURE_INTERVAL = 2500;
 
 unsigned long lastCapture = 0;
 
