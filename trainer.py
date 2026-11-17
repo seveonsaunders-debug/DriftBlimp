@@ -8,11 +8,11 @@ import torch
 from ultralytics import YOLO
 
 MAX_RETRIES = 3
-PROJECT_DIRECTORY = Path(__file__).resolve()
+PROJECT_DIRECTORY = Path(__file__).resolve().parent
 DATASET_YAML = (
     PROJECT_DIRECTORY
     / 'datasets'
-    / 'peaceful-heron-efbc868e'
+    / 'reduced-heron-29c24695'
     / 'data.yaml'
 )
 RUNS_DIRECTORY = PROJECT_DIRECTORY / 'detect'
@@ -118,7 +118,7 @@ def main():
             if resume_checkpoint is None:
                 yolo.train(
                     data=str(DATASET_YAML),
-                    epochs=100,
+                    epochs=35,
                     imgsz=640,
                     device=0,
                     project=str(RUNS_DIRECTORY),

@@ -1,0 +1,141 @@
+task: segment
+name: reduced-heron
+description: Household items plus glasses (attempt 2)
+bytes: 1273913619
+url: https://platform.ultralytics.com/cerebralcortex/datasets/reduced-heron
+colors:
+- '#0bdbeb'
+- '#f3f3f3'
+- '#00dfb7'
+- '#111f68'
+- '#ff6fdd'
+- '#cced00'
+- '#00ffff'
+- '#26c000'
+- '#01ffb3'
+- '#fc6d2f'
+- '#a2ff0b'
+- '#0bdbeb'
+- '#f3f3f3'
+- '#00dfb7'
+- '#111f68'
+- '#ff6fdd'
+- '#ff444f'
+- '#cced00'
+- '#00f344'
+- '#00b4ff'
+- '#00ffff'
+- '#01ffb3'
+- '#7d24ff'
+- '#ff1b6c'
+- '#fc6d2f'
+- '#00dfb7'
+- '#111f68'
+- '#ff444f'
+- '#cced00'
+- '#00f344'
+- '#bd00ff'
+- '#00b4ff'
+- '#00ffff'
+- '#26c000'
+- '#01ffb3'
+- '#7d24ff'
+- '#ff1b6c'
+- '#fc6d2f'
+- '#ff6fdd'
+- '#cced00'
+- '#00f344'
+- '#bd00ff'
+- '#00b4ff'
+- '#dd00ba'
+- '#00ffff'
+- '#01ffb3'
+- '#7d24ff'
+- '#ff1b6c'
+- '#a2ff0b'
+- '#042aff'
+- '#0bdbeb'
+- '#00dfb7'
+- '#ff6fdd'
+- '#ff444f'
+- '#cced00'
+- '#00f344'
+- '#bd00ff'
+- '#7b0068'
+- '#ff1b6c'
+- '#fc6d2f'
+- '#a2ff0b'
+- '#042aff'
+- '#0bdbeb'
+version: latest
+created_at: '2026-11-15T22:50:58.189Z'
+updated_at: '2026-11-17T17:23:12.070Z'
+names:
+  0: apple
+  1: backpack
+  2: banana
+  3: baseball bat
+  4: baseball glove
+  5: bed
+  6: book
+  7: bottle
+  8: bowl
+  9: car
+  10: carpet
+  11: cat
+  12: cell phone
+  13: chair
+  14: clock
+  15: coat hanger
+  16: coffee table
+  17: cologne
+  18: couch
+  19: cup
+  20: dog
+  21: door
+  22: eyewear
+  23: fork
+  24: frisbee
+  25: handbag
+  26: headset
+  27: hot dog
+  28: jacket
+  29: jar
+  30: keyboard
+  31: keychain
+  32: knife
+  33: laptop
+  34: medicine
+  35: microwave
+  36: mouse
+  37: napkin
+  38: plate
+  39: refrigerator
+  40: remote
+  41: ring
+  42: sandwich
+  43: scissors
+  44: shaker
+  45: sink
+  46: skateboard
+  47: slipper
+  48: socks
+  49: spoon
+  50: sports ball
+  51: suitcase
+  52: teddy bear
+  53: tennis racket
+  54: throw pillow
+  55: tie
+  56: toaster
+  57: tv
+  58: umbrella
+  59: vase
+  60: wallet
+  61: watch
+  62: water glass
+test: images/test
+train: images/train
+val: images/val
+hash: 29c24695
+complete: true
