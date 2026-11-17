@@ -108,10 +108,11 @@ face_cascade = cv2.CascadeClassifier(
 model_path = (
     Path(__file__).resolve().parent
     / "detect"
-    / "train-2"
+    / "reduced-heron-29c24695-2"
     / "weights"
-    / "best.pt"
+    / "last-good.pt"
 )
+print(f"model_path: {model_path}")
 if not model_path.is_file():
     raise FileNotFoundError(f"Trained model not found: {model_path}")
 
