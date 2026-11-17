@@ -17,7 +17,7 @@ DATASET_YAML = (
 )
 RUNS_DIRECTORY = PROJECT_DIRECTORY / 'detect'
 ACTIVE_MODEL_FILE = PROJECT_DIRECTORY / 'active_model.txt'
-BASE_MODEL = PROJECT_DIRECTORY / 'yolo11n.pt'
+BASE_MODEL = PROJECT_DIRECTORY / 'yolo26x.pt'
 
 
 def keep_recovery_checkpoint(trainer):

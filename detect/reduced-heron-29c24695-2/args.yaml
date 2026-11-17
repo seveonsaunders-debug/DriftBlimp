@@ -1,6 +1,6 @@
 task: detect
 mode: train
-model: C:\Users\Admin\DriftBlimp\DriftBlimp2\DriftBlimp\yolo11n.pt
+model: C:\Users\Admin\DriftBlimp\DriftBlimp2\DriftBlimp\detect\reduced-heron-29c24695-2\weights\last.pt
 data: C:\Users\Admin\DriftBlimp\DriftBlimp2\DriftBlimp\datasets\reduced-heron-29c24695\data.yaml
 epochs: 35
 time: null
@@ -17,7 +17,7 @@ name: reduced-heron-29c24695-2
 exist_ok: false
 pretrained: true
 cls_remap: true
-optimizer: auto
+optimizer: AdamW
 verbose: true
 seed: 0
 deterministic: true
@@ -25,7 +25,7 @@ single_cls: false
 rect: false
 cos_lr: false
 close_mosaic: 10
-resume: false
+resume: C:\Users\Admin\DriftBlimp\DriftBlimp2\DriftBlimp\detect\reduced-heron-29c24695-2\weights\last.pt
 amp: true
 fraction: 1.0
 profile: false
@@ -70,13 +70,13 @@ dynamic: false
 simplify: true
 opset: null
 workspace: null
-lr0: 0.01
+lr0: 0.000149
 lrf: 0.01
 momentum: 0.937
 weight_decay: 0.0005
 warmup_epochs: 3.0
 warmup_momentum: 0.8
-warmup_bias_lr: 0.1
+warmup_bias_lr: 0.0
 distill_model: null
 dis: 6.0
 box: 7.5
