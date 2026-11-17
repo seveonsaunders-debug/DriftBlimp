@@ -6,10 +6,6 @@ import cv2
 from textwrap import fill
 from ultralytics import YOLO  # pip install ultralytics
 
-# 顔検出モデル（Haar Cascade）
-face_cascade = cv2.CascadeClassifier(
-    cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
-)
 
 # Load the checkpoint selected in active_model.txt.
 project_directory = Path(__file__).resolve().parent
@@ -63,8 +59,8 @@ while True:
 
 # PCのカメラを起動（0番が内蔵カメラ）
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
 if not cap.isOpened():
     print('カメラが見つかりませんでした')
@@ -114,25 +110,17 @@ while True:
         print(f'Found {target_name} at {target_confidence * 100:.1f}% confidence')
     target_was_found = target_found
 
-    # ---------- 顔検出（Haar Cascade） ----------
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
-
-    for (x, y, w, h) in faces:
-        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        cv2.putText(frame, 'Face', (x, y + h + 25),  # 物体ラベルと重ならないよう下に表示
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-
+ 
     target_status = (
         f'Found {target_name}: {target_confidence * 100:.1f}%'
         if target_found else f'Searching for {target_name} (min {confidence_threshold * 100:g}%)'
     )
     cv2.putText(frame, target_status, (10, 30),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-    cv2.putText(frame, f'Faces: {len(faces)}  Objects: {object_count}  Other objects: {"ON" if show_other_objects else "OFF"}', (10, 60),
+    cv2.putText(frame, f'  Objects: {object_count}  Other objects: {"ON" if show_other_objects else "OFF"}', (10, 60),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
 
-    cv2.imshow('Real-time Face & Object Detection', frame)
+    cv2.imshow('Real-time Object Detection', frame)
 
     key = cv2.waitKey(1) & 0xFF
     if key == ord('o'):

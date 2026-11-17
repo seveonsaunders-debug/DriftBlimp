@@ -12,12 +12,12 @@ PROJECT_DIRECTORY = Path(__file__).resolve().parent
 DATASET_YAML = (
     PROJECT_DIRECTORY
     / 'datasets'
-    / 'elastic-robin2-9bb63ef8'
+    / 'reduced-heron-29c24695'
     / 'data.yaml'
 )
 RUNS_DIRECTORY = PROJECT_DIRECTORY / 'detect'
 ACTIVE_MODEL_FILE = PROJECT_DIRECTORY / 'active_model.txt'
-BASE_MODEL = PROJECT_DIRECTORY / 'yolo11n.pt'
+BASE_MODEL = PROJECT_DIRECTORY / 'yolo26x.pt'
 
 
 def keep_recovery_checkpoint(trainer):
@@ -118,7 +118,7 @@ def main():
             if resume_checkpoint is None:
                 yolo.train(
                     data=str(DATASET_YAML),
-                    epochs=100,
+                    epochs=35,
                     imgsz=640,
                     device=0,
                     project=str(RUNS_DIRECTORY),
