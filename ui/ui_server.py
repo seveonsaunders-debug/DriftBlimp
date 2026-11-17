@@ -26,6 +26,7 @@ import time
 
 import requests
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, RedirectResponse, Response
 from pydantic import BaseModel, Field
 
@@ -35,6 +36,15 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 STEP_SECONDS = 2.5
 MOCK_CLASSES = ["keys", "glasses", "phone", "tv remote", "pill box"]
 CATEGORIES = ["Everyday", "Medicine", "Other"]
+MOCK_SVG = (
+    '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480">'
+    '<rect width="640" height="480" fill="#dfe6f0"/>'
+    '<rect x="190" y="150" width="260" height="180" rx="24" fill="#0a3d91"/>'
+    '<text x="320" y="238" font-family="Verdana,Arial,sans-serif" font-size="34" '
+    'font-weight="700" text-anchor="middle" fill="#ffffff">SAMPLE PHOTO</text>'
+    '<text x="320" y="285" font-family="Verdana,Arial,sans-serif" font-size="22" '
+    'text-anchor="middle" fill="#ffffff">(mock mode)</text></svg>'
+)
 
 app = FastAPI()
 
@@ -151,7 +161,23 @@ def delete_item(item_id: int):
                 os.remove(_photo_path(item_id, s))
             except OSError:
                 pass
+    if MODE == "real":
+        try:
+            requests.delete(f"{HB}/reference/{item_id}", timeout=3)
+        except requests.RequestException:
+            pass
     return {"ok": True}
+
+
+def _push_reference(item_id, slot, data):
+    """Send a reference photo to the home base too (real mode only)."""
+    if MODE != "real":
+        return
+    try:
+        requests.put(f"{HB}/reference/{item_id}/{slot}", data=data,
+                     headers={"Content-Type": "image/jpeg"}, timeout=5)
+    except requests.RequestException:
+        pass    # photo is still saved here; the home base can be re-synced later
 
 
 @app.put("/api/items/{item_id}/photo/{slot}")
@@ -166,6 +192,7 @@ async def put_photo(item_id: int, slot: int, request: Request):
         raise HTTPException(400, "Photo must be a JPEG under 5 MB.")
     with open(_photo_path(item_id, slot), "wb") as f:
         f.write(data)
+    await run_in_threadpool(_push_reference, item_id, slot, data)
     return {"ok": True}
 
 
@@ -273,8 +300,8 @@ def classes():
 @app.get("/api/found_image")
 def found_image():
     """Cropped photo of the found object, if the receiver provides one."""
-    if MODE != "real":
-        raise HTTPException(404, "No image.")
+    if MODE != "real":      # MOCK: a sample picture so the screen layout can be tested
+        return Response(MOCK_SVG, media_type="image/svg+xml")
     r = _homebase("GET", "/found_image")
     if r.status_code != 200:
         raise HTTPException(404, "No image.")
