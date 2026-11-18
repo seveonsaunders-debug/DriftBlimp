@@ -12,12 +12,12 @@ PROJECT_DIRECTORY = Path(__file__).resolve().parent
 DATASET_YAML = (
     PROJECT_DIRECTORY
     / 'datasets'
-    / 'reduced-heron-29c24695'
+    / 'glasses-78b24586'
     / 'data.yaml'
 )
 RUNS_DIRECTORY = PROJECT_DIRECTORY / 'detect'
 ACTIVE_MODEL_FILE = PROJECT_DIRECTORY / 'active_model.txt'
-BASE_MODEL = PROJECT_DIRECTORY / 'yolo26x.pt'
+BASE_MODEL = PROJECT_DIRECTORY / 'yolo11n.pt'
 
 
 def keep_recovery_checkpoint(trainer):
