@@ -100,17 +100,10 @@ def start_server():
 # 5. Load object and face detection
 # ----------------------------------
 
-face_cascade = cv2.CascadeClassifier(
-    cv2.data.haarcascades +
-    "haarcascade_frontalface_default.xml"
-)
 
 model_path = (
     Path(__file__).resolve().parent
-    / "detect"
-    / "reduced-heron-29c24695-2"
-    / "weights"
-    / "last-good.pt"
+    / "glasses.pt"
 )
 print(f"model_path: {model_path}")
 if not model_path.is_file():
@@ -327,31 +320,11 @@ while True:
         frame, cv2.COLOR_BGR2GRAY
     )
 
-    faces = face_cascade.detectMultiScale(
-        gray,
-        scaleFactor=1.1,
-        minNeighbors=5
-    )
 
-    for (x, y, w, h) in faces:
 
-        cv2.rectangle(
-            frame,
-            (x, y),
-            (x + w, y + h),
-            (0, 255, 0),
-            2
-        )
+    
 
-        cv2.putText(
-            frame,
-            "Face",
-            (x, y + h + 25),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.7,
-            (0, 255, 0),
-            2
-        )
+        
 
     # ----------------------------------
     # 13. Display detection information
@@ -376,7 +349,7 @@ while True:
 
     cv2.putText(
         frame,
-        f"Faces: {len(faces)} Objects: {object_count}",
+        f"Objects: {object_count}",
         (10, 60),
         cv2.FONT_HERSHEY_SIMPLEX,
         0.7,

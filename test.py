@@ -1,28 +1,61 @@
-from ollama import chat
+import argparse
+import os
 from pathlib import Path
 
-# Pass in the path to the image
-path = input('Please enter the path to the image: ').strip().strip('"')
-image_path = Path(path).expanduser()
+from ollama import ChatResponse, ResponseError, chat
 
-if not image_path.is_file():
-    raise FileNotFoundError(f'Image file not found: {image_path}')
 
-# You can also pass in base64 encoded image data
-# img = base64.b64encode(image_path.read_bytes()).decode()
-# or the raw bytes
-# img = image_path.read_bytes()
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description='Describe an image with a local Ollama vision model.'
+    )
+    parser.add_argument(
+        'image',
+        nargs='?',
+        help='Path to the image.',
+    )
+    parser.add_argument(
+        '--model',
+        default=os.environ.get('OLLAMA_MODEL', 'gemma4'),
+        help='Ollama model name (default: gemma4).',
+    )
+    return parser.parse_args()
 
-response = chat(
-  model='gemma4',
-  messages=[
-    {
-      'role': 'user',
-      'content': 'What is in this image? Be concise.',
-      'images': [str(image_path.resolve())],
-    }
-  ],
-  options={'num_gpu': 0},
-)
 
-print(response.message.content)
+def get_image_path(args: argparse.Namespace) -> Path:
+    path = args.image
+    if path is None:
+        path = input('Please enter the path to the image: ').strip()
+
+    path = path.strip().strip('"')
+    image_path = Path(path).expanduser().resolve()
+
+    if not image_path.is_file():
+        raise SystemExit(f'Image file not found: {image_path}')
+
+    return image_path
+
+
+def main() -> None:
+    args = parse_args()
+    image_path = get_image_path(args)
+
+    try:
+        response: ChatResponse = chat(
+            model=args.model,
+            messages=[
+                {
+                    'role': 'user',
+                    'content': 'What is in this image? Be concise.',
+                    'images': [str(image_path)],
+                }
+            ],
+        )
+    except (ResponseError, ConnectionError) as error:
+        raise SystemExit(f'Ollama request failed: {error}')
+
+    print(response.message.content)
+
+
+if __name__ == '__main__':
+    main()
