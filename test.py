@@ -1,6 +1,12 @@
 import argparse
 import os
 from pathlib import Path
+from time import perf_counter
+
+# Ollama should not try to load this workstation's GTX 970 with a newer PTX
+# toolchain. num_gpu=0 below also disables GPU layers for this request.
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+os.environ['OLLAMA_NUM_GPU'] = '0'
 
 from ollama import ChatResponse, ResponseError, chat
 
@@ -36,17 +42,22 @@ def get_image_path(args: argparse.Namespace) -> Path:
     return image_path
 
 
+
 def main() -> None:
+    start = perf_counter()
     args = parse_args()
     image_path = get_image_path(args)
 
     try:
         response: ChatResponse = chat(
             model=args.model,
+            options={
+                'num_gpu': 0,
+            },
             messages=[
                 {
                     'role': 'user',
-                    'content': 'What is in this image? Be concise.',
+                    'content': 'If there are eyeglasses, describe the eyeglasses concisely in one sentence 20 words.',
                     'images': [str(image_path)],
                 }
             ],
@@ -55,6 +66,8 @@ def main() -> None:
         raise SystemExit(f'Ollama request failed: {error}')
 
     print(response.message.content)
+    end=perf_counter()
+    print(end-start)
 
 
 if __name__ == '__main__':
