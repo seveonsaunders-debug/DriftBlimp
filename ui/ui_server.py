@@ -259,6 +259,8 @@ def status():
             stage = min(2, int(_elapsed() // STEP_SECONDS))
             try:
                 data = _homebase("GET", "/status").json()
+                if data["event_id"] < STATE["baseline"]:      # receiver was restarted
+                    STATE["baseline"] = data["event_id"]
                 if data["event_id"] > STATE["baseline"]:      # new detection!
                     _mark_found()
                     _set("RETURNING")
@@ -283,6 +285,7 @@ def status():
     return {"mode": mode, "stage": stage, "item_id": STATE["item_id"],
             "found": STATE["found"], "battery": STATE["battery"],
             "map_pct": STATE["map_pct"], "demo": MODE != "real",
+            "baseline": STATE["baseline"],
             "homebase_ok": STATE["hb_ok"]}
 
 
@@ -315,6 +318,7 @@ def search(req: SearchRequest):
         item = dict(_find(req.item_id))
     target = (item["model_class"] or item["name"]).strip()
     if MODE == "real":
+        baseline = _homebase("GET", "/status").json()["event_id"]
         r = _homebase("POST", "/target",
                       json={"name": target, "confidence": req.confidence})
         if r.status_code == 400:
@@ -323,7 +327,7 @@ def search(req: SearchRequest):
                      "A caregiver can set the AI name in Edit.")
         if not r.ok:
             raise HTTPException(502, "The home base had a problem.")
-        STATE["baseline"] = _homebase("GET", "/status").json()["event_id"]
+        STATE["baseline"] = baseline
     STATE["item_id"] = req.item_id
     STATE["found"] = False
     _set("SEARCHING")

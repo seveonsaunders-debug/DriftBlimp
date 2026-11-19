@@ -5,227 +5,181 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>DriftBlimp</title>
 <style>
-:root{--bg:#fff;--fg:#000;--card:#eef1f6;--primary:#0a3d91;--on-primary:#fff;--danger:#b00020;--on-danger:#fff;--ok:#0b6b2e;--line:#000;
+:root{--bg:#fff;--fg:#111;--card:#eef2f8;--pri:#0a3d91;--onp:#fff;--ok:#0b6b2e;--onok:#fff;--dng:#b00020;--ondng:#fff;--line:#111;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#000;--fg:#fff;--card:#1a1f2b;--primary:#9cc0ff;--on-primary:#000;--danger:#ff6b7a;--on-danger:#000;--ok:#6fe39a;--line:#fff}}
-:root[data-theme="dark"]{--bg:#000;--fg:#fff;--card:#1a1f2b;--primary:#9cc0ff;--on-primary:#000;--danger:#ff6b7a;--on-danger:#000;--ok:#6fe39a;--line:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#000;--fg:#fff;--card:#1a1f2b;--pri:#9cc0ff;--onp:#000;--ok:#6fe39a;--onok:#000;--dng:#ff6b7a;--ondng:#000;--line:#fff}}
+:root[data-theme="dark"]{--bg:#000;--fg:#fff;--card:#1a1f2b;--pri:#9cc0ff;--onp:#000;--ok:#6fe39a;--onok:#000;--dng:#ff6b7a;--ondng:#000;--line:#fff}
 *{box-sizing:border-box}
-html,body{height:100%;margin:0}
-html{font-size:calc(22px * var(--ts,1));-webkit-text-size-adjust:100%}
-body{background:var(--bg);color:var(--fg);font-family:Verdana,"Segoe UI",Arial,sans-serif;line-height:1.4;display:flex;flex-direction:column;overflow:hidden}
-#top{display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;border-bottom:3px solid var(--line);font-weight:700;gap:1rem}
-#main{flex:1;overflow-y:auto;padding:1rem;max-width:900px;width:100%;margin:0 auto}
-h1{font-size:1.6rem;margin:.3rem 0 1rem}
-h2{font-size:1.25rem;margin:1rem 0 .5rem}
-p{margin:.5rem 0}
-button{font:inherit;font-weight:700;min-height:64px;padding:.7rem 1.2rem;border:3px solid var(--line);border-radius:14px;background:var(--bg);color:var(--fg);width:100%;margin:.5rem 0;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.6rem;text-align:center}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:4px solid var(--primary);outline-offset:3px}
-.pri{background:var(--primary);color:var(--on-primary)}
-.big{min-height:150px;font-size:1.7rem}
-.dng{background:var(--danger);color:var(--on-danger)}
-.row{display:flex;gap:1rem}.row>*{flex:1}
-.card{background:var(--card);border:3px solid var(--line);border-radius:14px;padding:1rem;margin:.6rem 0}
-.item{display:flex;align-items:center;justify-content:space-between;gap:1rem}
-.item button{width:auto;margin:0}
-.steps{list-style:none;padding:0;margin:1rem 0}
-.steps li{display:flex;gap:.8rem;align-items:center;padding:.7rem 1rem;border:3px solid var(--line);border-radius:14px;margin:.5rem 0;font-weight:700}
-.steps li.done{background:var(--card)}
-.steps li.now{background:var(--primary);color:var(--on-primary)}
-.steps li.todo{opacity:.65;border-style:dashed}
-.ic{font-size:1.4rem;width:2rem;text-align:center}
-label{display:block;font-weight:700;margin:1rem 0 .3rem}
-input[type=text],select{font:inherit;width:100%;min-height:60px;padding:.5rem 1rem;border:3px solid var(--line);border-radius:14px;background:var(--bg);color:var(--fg)}
-input[type=range]{width:100%;height:50px}
-.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem}
-.photo{border:3px dashed var(--line);border-radius:14px;min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;text-align:center;cursor:pointer;overflow:hidden;padding:.3rem}
-.photo img{width:100%;height:90px;object-fit:cover;border-radius:8px}
-.photo input{display:none}
-.big-msg{font-size:1.6rem;font-weight:700;text-align:center;margin:1rem 0}
-.found{font-size:4rem;text-align:center}
-.map{display:grid;grid-template-columns:repeat(16,1fr);gap:2px;border:3px solid var(--line);padding:4px;border-radius:10px;background:var(--bg)}
-.map i{aspect-ratio:1;background:var(--card);display:block}
-.map i.on{background:var(--primary)}
-.map i.me{background:var(--danger);outline:3px solid var(--fg)}
-.bar{height:26px;border:3px solid var(--line);border-radius:14px;overflow:hidden;margin:.6rem 0}
-.bar div{height:100%;background:var(--ok);width:0}
-#estop{padding:.6rem 1rem;border-top:3px solid var(--line);background:var(--bg)}
-#hold{position:relative;overflow:hidden;min-height:76px;margin:0;font-size:1.3rem;touch-action:none;user-select:none;-webkit-user-select:none;background:var(--danger);color:var(--on-danger);border-color:var(--line)}
-#fill{position:absolute;inset:0 auto 0 0;width:0;background:rgba(0,0,0,.45);pointer-events:none}
-#hold span{position:relative}
+html,body{height:100%;margin:0;overflow:hidden}
+html{font-size:calc(clamp(17px,2.7vmin,32px) * var(--ts,1));-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--fg);font-family:Verdana,"Segoe UI",Arial,sans-serif;line-height:1.3;display:flex;flex-direction:column;overscroll-behavior:none}
+#top{display:flex;justify-content:space-between;gap:.6rem;padding:.35rem .8rem;border-bottom:3px solid var(--line);font-weight:700;font-size:.8rem}
+#main{flex:1;min-height:0;display:flex;flex-direction:column;padding:.5rem .8rem;max-width:1100px;width:100%;margin:0 auto;overflow:hidden}
+#main.scroll{overflow-y:auto}
+h1{font-size:1.45rem;margin:.1rem 0 .5rem;text-align:center}
+h2{font-size:1.1rem;margin:.8rem 0 .3rem}
+p{margin:.4rem 0}
+.msg{font-size:1.3rem;font-weight:700;text-align:center;margin:.4rem 0}
+button{font:inherit;font-weight:700;min-height:3.1rem;border:3px solid var(--line);border-radius:16px;background:var(--bg);color:var(--fg);padding:.4rem 1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;margin:.3rem 0}
+button:disabled{opacity:.35}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:4px solid var(--pri);outline-offset:3px}
+.pri{background:var(--pri);color:var(--onp)}.ok{background:var(--ok);color:var(--onok)}
+.small{min-height:2.3rem;font-size:.75rem;font-weight:400;margin:.2rem 0 0}
+.row{display:flex;gap:.8rem}.row>*{flex:1}
+.grid{flex:1;min-height:0;display:grid;gap:.7rem}
+.tile{flex-direction:column;padding:0;margin:0;min-height:0;overflow:hidden;border-width:4px;border-radius:20px;background:var(--card);gap:0}
+.pic{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.pic img{width:100%;height:100%;object-fit:cover}
+.em{font-size:min(6rem,14vmin)}
+.nm{width:100%;padding:.4rem;font-size:1.3rem;background:var(--pri);color:var(--onp)}
+.hero{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;border:4px solid var(--line);border-radius:20px;background:var(--card);overflow:hidden}
+.hero img{max-width:100%;max-height:100%;object-fit:contain}.hero .em{font-size:min(9rem,22vmin)}
+.dots{display:flex;justify-content:center;gap:.8rem;margin:.2rem 0}
+.dots i{width:1.1rem;height:1.1rem;border-radius:50%;border:3px solid var(--line)}.dots i.on{background:var(--pri)}
+.card{background:var(--card);border:3px solid var(--line);border-radius:14px;padding:.8rem;margin:.5rem 0}
+.item{display:flex;align-items:center;justify-content:space-between;gap:1rem}.item button{width:auto;margin:0}
+.note{font-size:.75rem;font-weight:400}
+label{display:block;font-weight:700;margin:.8rem 0 .3rem}
+input[type=text],select{font:inherit;width:100%;min-height:3rem;padding:.4rem .8rem;border:3px solid var(--line);border-radius:14px;background:var(--bg);color:var(--fg)}
+input[type=range]{width:100%;height:2.4rem}
+.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
+.photo{border:3px dashed var(--line);border-radius:14px;min-height:6rem;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;cursor:pointer;overflow:hidden;margin:0}
+.photo img{width:100%;height:4.5rem;object-fit:cover}.photo input{display:none}
+.map{display:grid;grid-template-columns:repeat(16,1fr);gap:2px;border:3px solid var(--line);padding:4px;border-radius:10px}
+.map i{aspect-ratio:1;background:var(--card)}.map i.on{background:var(--pri)}.map i.me{background:var(--dng)}
+.bar{height:1.4rem;border:3px solid var(--line);border-radius:12px;overflow:hidden;margin:.5rem 0}.bar div{height:100%;background:var(--ok)}
+.hold{touch-action:none;user-select:none;-webkit-user-select:none}
+#estop{padding:.4rem .8rem;border-top:3px solid var(--line)}
+#hold{min-height:3rem;margin:0;background:linear-gradient(90deg,rgba(0,0,0,.45) var(--p,0%),transparent 0),var(--dng);color:var(--ondng)}
+#cg{background:linear-gradient(90deg,rgba(10,61,145,.35) var(--p,0%),transparent 0),var(--bg)}
 #modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;padding:1rem;z-index:50}
-#modal .box{background:var(--bg);color:var(--fg);border:4px solid var(--line);border-radius:18px;padding:1.2rem;max-width:620px;width:100%;max-height:100%;overflow:auto}
+#modal .box{background:var(--bg);color:var(--fg);border:4px solid var(--line);border-radius:18px;padding:1rem;max-width:620px;width:100%;max-height:100%;overflow:auto}
 #dim{position:fixed;inset:0;background:#000;pointer-events:none;opacity:0;z-index:40}
-.note{font-size:.85rem;font-weight:400}
-.fimg{width:100%;max-height:45vh;object-fit:contain;border:3px solid var(--line);border-radius:14px;margin:.5rem 0}
 </style>
 </head>
 <body>
-<div id="top"><span id="status"></span><span>DriftBlimp</span></div>
+<div id="top"><span id="status"></span><span id="bname"></span></div>
 <div id="main"></div>
-<div id="estop"><button id="hold" aria-label="Emergency stop. Press and hold for 2 seconds."><div id="fill"></div><span>⛔ EMERGENCY STOP – press and hold</span></button></div>
+<div id="estop"><button id="hold" class="hold" aria-label="Emergency stop. Press and hold for 2 seconds.">⛔ STOP THE BLIMP – hold 2 seconds</button></div>
 <div id="modal"><div class="box" id="mbox"></div></div>
 <div id="dim"></div>
 <script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const SEARCH=['Flying to where it was last seen','Scanning the room','Checking camera pictures','Found it!'];
-const RET=['Returning to the dock','Landing on the dock','Charging'];
-const S={screen:'home',items:[
- {id:1,name:'Keys',cat:'Everyday',photos:[null,null,null]},
- {id:2,name:'Glasses',cat:'Everyday',photos:[null,null,null]},
- {id:3,name:'Phone',cat:'Everyday',photos:[null,null,null]},
- {id:4,name:'TV remote',cat:'Everyday',photos:[null,null,null]},
- {id:5,name:'Pill box',cat:'Medicine',photos:[null,null,null]}],
- sel:null,stage:0,ret:0,found:false,paused:null,edit:null,
- set:{name:'My DriftBlimp',ts:1,dim:0,sound:true,addr:'192.168.1.20'},
- map:{cells:[],pct:0,run:false,done:false},battery:85,nid:10};
-let timer=null;
-const LIVE={on:false,ok:true,demo:true,last:undefined,classes:[]};
-async function api(p,body,method){const r=await fetch('/api'+p,{method:method||(body===undefined?'GET':'POST'),headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
- if(!r.ok){let m='Something went wrong.';try{m=(await r.json()).detail||m}catch(e){}throw new Error(m)}return r.json()}
-function notice(t,m){modal(`<h1>${esc(t)}</h1><p>${esc(m)}</p><button class="pri" id="ok">OK</button>`);$('#ok').onclick=closeModal}
-async function saveItemLive(it){
- const body={name:it.name,cat:it.cat,model_class:it.model_class||'',notes:it.notes||''};
- const saved=it.isNew?await api('/items',body):await api('/items/'+it.id,body,'PUT');
- for(let i=0;i<3;i++)if(it.dirty&&it.dirty[i]){
-  const blob=await (await fetch(it.photos[i])).blob();
-  const r=await fetch('/api/items/'+saved.id+'/photo/'+i,{method:'PUT',headers:{'Content-Type':'image/jpeg'},body:blob});
-  if(!r.ok)throw new Error('A photo could not be saved.')}
- S.items=await api('/items')}
-function when(f){try{return new Date(f.time).toLocaleString([],{weekday:'short',hour:'numeric',minute:'2-digit'})+(f.room?' in the '+f.room:'')}catch(e){return ''}}
-function fillMap(){const m=S.map,n=Math.floor(m.pct*1.6);for(let i=0;i<n;i++)m.cells[(Math.floor(i/16)%2===0)?i:Math.floor(i/16)*16+15-(i%16)]=1;m.last=Math.max(0,n-1)}
+const SEARCH=['Flying over to look','Looking around the room','Checking what I see'];
+const RET=['Flying back home','Landing on the dock','Charging'];
+const EM=[['key','🔑'],['glass','👓'],['phone','📱'],['remote','📺'],['pill','💊'],['med','💊'],['wallet','👛'],['purse','👛'],['hat','🧢'],['cane','🦯']];
+const SCROLL=['care','items','edit','settings','setup','mapping','rooms'];
+const S={screen:'home',page:0,sel:null,stage:0,ret:0,found:false,paused:null,edit:null,noimg:false,ft:0,battery:85,nid:10,
+ items:['Keys','Glasses','Phone','TV remote','Pill box'].map((n,i)=>({id:i+1,name:n,cat:i==4?'Medicine':'Everyday',photos:[null,null,null]})),
+ set:{name:'Blimp',ts:1,dim:0},map:{cells:[],pct:0,run:false,done:false,last:-1}};
+const LIVE={on:false,ok:true,demo:true,last:undefined,classes:[],idle:0};
+let timer=null,LAST='',SIG='',H=null;
 const stop=()=>{clearInterval(timer);timer=null};
 const go=s=>{S.screen=s;render()};
-
-function status(){
- let t='🟢 Ready';
- if(S.paused)t='🔴 Stopped';
- else if(S.screen==='search')t='🔵 Searching';
- else if(S.screen==='return')t='🔵 Going home';
- else if(S.screen==='mapping')t='🔵 Mapping';
- $('#status').textContent=(LIVE.on&&!LIVE.ok?'⚠ No connection to the home base':t+'  🔋 '+S.battery+'%')+(LIVE.on&&!LIVE.demo?'':'  (demo)');
-}
-function steps(list,cur){
- return '<ul class="steps">'+list.map((x,i)=>{
-  const c=i<cur?'done':i===cur?'now':'todo';
-  const ic=i<cur?'✔':i===cur?'▶':'○';
-  return `<li class="${c}"><span class="ic">${ic}</span>${x}</li>`}).join('')+'</ul>';
-}
-function back(to,label){return `<button data-go="${to}">← ${label||'Back'}</button>`}
+const cur=()=>S.items.find(i=>i.id===S.sel)||{name:'item',photos:[]};
+const lc=i=>esc(i.name.toLowerCase());
+function em(n){n=n.toLowerCase();for(const[k,e]of EM)if(n.includes(k))return e;return '📦'}
+function pic(i){const p=(i.photos||[]).find(x=>x);return p?`<img src="${p}" alt="${esc(i.name)}">`:`<span class="em">${em(i.name)}</span>`}
+async function api(p,body,method){const r=await fetch('/api'+p,{method:method||(body===undefined?'GET':'POST'),headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
+ if(!r.ok){let m='Something went wrong.';try{m=(await r.json()).detail||m}catch(e){}throw new Error(m)}return r.json()}
+function modal(h){$('#mbox').innerHTML=h;$('#modal').style.display='flex'}
+function closeModal(){$('#modal').style.display='none'}
+function notice(t,m){modal(`<h1>${esc(t)}</h1><p>${esc(m)}</p><button class="pri" id="ok">OK</button>`);$('#ok').onclick=closeModal}
+const back=(to,l)=>`<button data-go="${to}">← ${l||'Back'}</button>`;
 
 /* ---------- screens ---------- */
 const V={
-home(){return `<h1>${esc(S.set.name)}</h1>
- <button class="pri big" data-go="pick">🔍 Find an Item</button>
- <div class="row"><button data-go="items">📦 My Items</button><button data-go="settings">⚙ Settings</button></div>`},
-pick(){return `${back('home')}<h1>What are you looking for?</h1>`+
- (S.items.length?S.items.map(i=>`<button class="pri" data-find="${i.id}">${esc(i.name)}</button>`).join(''):'<p>No items yet. Add one in My Items.</p>')},
-search(){const it=S.items.find(i=>i.id===S.sel);
- return `<h1>Looking for: ${esc(it?it.name:'')}</h1>${steps(SEARCH,S.stage)}
- <p class="note">You do not need to do anything. The blimp will tell you when it finds your item.</p>
- <button class="pri" data-act="endsearch">🏠 Stop Search and Go Home</button>`},
-return(){const it=S.items.find(i=>i.id===S.sel);
- let top='';
- if(S.found&&it)top=`<div class="card">${LIVE.on&&!S.noimg?`<img class="fimg" src="/api/found_image?t=${S.ft||0}" alt="Photo of the found item" onerror="S.noimg=true;this.remove()">`:''}<div class="found">✅</div><div class="big-msg">Your ${esc(it.name.toLowerCase())} ${S.where||'was found'}.</div></div>`;
- else top='<h1>Going home</h1>';
- return top+steps(RET,S.ret)+(S.ret>=3?'<button class="pri" data-act="done">OK, Done</button>':'')},
-items(){return `${back('home')}<h1>My Items</h1>`+S.items.map(i=>`<div class="card item"><div><b>${esc(i.name)}</b>${i.last_found?`<div class="note">Last found: ${esc(when(i.last_found))}</div>`:''}</div><div class="row" style="gap:.5rem"><button data-edit="${i.id}">Edit</button></div></div>`).join('')+
- '<button class="pri" data-edit="new">➕ Add an Item</button>'},
-edit(){const it=S.edit;
- return `<h1>${it.isNew?'Add an Item':'Edit Item'}</h1>
+home(){const per=6,pages=Math.max(1,Math.ceil(S.items.length/per));S.page=Math.min(S.page,pages-1);
+ const list=S.items.slice(S.page*per,S.page*per+per),n=list.length,port=matchMedia('(orientation:portrait)').matches;
+ const c=port?2:(n<=2?Math.max(n,1):n<=4?2:3),r=Math.max(1,Math.ceil(n/c));
+ return `<h1>What are you looking for?</h1><div class="grid" style="grid-template-columns:repeat(${c},1fr);grid-template-rows:repeat(${r},1fr)">`+
+ (list.map(i=>`<button class="tile" data-pick="${i.id}"><span class="pic">${pic(i)}</span><span class="nm">${esc(i.name)}</span></button>`).join('')||'<p class="msg">No items yet. Please ask a caregiver.</p>')+`</div>`+
+ (pages>1?`<div class="row"><button data-page="-1"${S.page?'':' disabled'}>◀ Back</button><button data-page="1"${S.page<pages-1?'':' disabled'}>More ▶</button></div>`:'')+
+ `<button class="small hold" id="cg">🔒 Caregiver: hold for 3 seconds</button>`},
+confirm(){const it=cur();return `<h1>Find your ${lc(it)}?</h1><div class="hero">${pic(it)}</div><div class="row"><button class="ok" data-act="yes">✔ Yes</button><button data-go="home">✖ No</button></div>`},
+search(){const it=cur(),k=Math.min(S.stage,2);
+ return `<h1>I am looking for your ${lc(it)}</h1><div class="hero">${pic(it)}</div><p class="msg">${SEARCH[k]}…</p><div class="dots">${[0,1,2].map(i=>`<i class="${i<=k?'on':''}"></i>`).join('')}</div><button class="pri" data-act="endsearch">🏠 Stop and come home</button>`},
+return(){const it=cur();let h;
+ if(S.found){const img=LIVE.on&&!S.noimg?`<img src="/api/found_image?t=${S.ft}" alt="Your ${lc(it)}" onerror="S.noimg=true;render()">`:pic(it);
+  h=`<h1>✅ I found your ${lc(it)}!</h1><div class="hero">${img}</div>`}
+ else h=`<h1>Coming home</h1><div class="hero"><span class="em">🏠</span></div>`;
+ return h+`<p class="msg">${S.ret>=3?'The blimp is home and charging.':RET[S.ret]+'…'}</p>`+(S.found||S.ret>=3?'<button class="ok" data-act="done">OK</button>':'')},
+care(){return `<h1>Caregiver</h1><button data-go="items">📦 Items and pictures</button><button data-go="settings">⚙ Settings</button><button data-go="setup">🗺 Map the house</button><button class="pri" data-go="home">← Back to start</button>`},
+items(){return `<h1>Items and pictures</h1>`+S.items.map(i=>`<div class="card item"><div><b>${esc(i.name)}</b>${i.last_found?`<div class="note">Last found: ${esc(when(i.last_found))}</div>`:''}</div><button data-edit="${i.id}">Edit</button></div>`).join('')+
+ `<button class="pri" data-edit="new">➕ Add an item</button>${back('care')}`},
+edit(){const it=S.edit;return `<h1>${it.isNew?'Add an item':'Edit item'}</h1>
  <label for="nm">Name</label><input type="text" id="nm" value="${esc(it.name)}" placeholder="For example: Dad’s keys">
  <label for="ct">Type</label><select id="ct">${['Everyday','Medicine','Other'].map(c=>`<option${c===it.cat?' selected':''}>${c}</option>`).join('')}</select>
- ${LIVE.on?`<label for="mc">What the camera looks for (caregiver)</label><input type="text" id="mc" list="cls" value="${esc(it.model_class||'')}" placeholder="Pick from the list"><datalist id="cls">${LIVE.classes.map(c=>`<option value="${esc(c)}">`).join('')}</datalist>`:''}
- <h2>Take 3 pictures</h2><p class="note">Hold the item close and take a clear picture of each view.</p>
- <div class="photos">${['Front','Top','Side'].map((l,i)=>`<label class="photo">${it.photos[i]?`<img src="${it.photos[i]}" alt="${l} view">`:'📷'}<span>${l}${it.photos[i]?' ✔':''}</span><input type="file" accept="image/*" capture="environment" data-ph="${i}"></label>`).join('')}</div>
- <button class="pri" data-act="saveitem">💾 Save Item</button>
- ${it.isNew?'':'<button data-act="delitem">🗑 Delete Item</button>'}
- ${back('items','Cancel')}`},
-settings(){const s=S.set;return `${back('home')}<h1>Settings</h1>
+ ${LIVE.on?`<label for="mc">What the camera looks for</label><input type="text" id="mc" list="cls" value="${esc(it.model_class||'')}" placeholder="Pick from the list"><datalist id="cls">${LIVE.classes.map(c=>`<option value="${esc(c)}">`).join('')}</datalist>`:''}
+ <h2>Pictures (the first one is shown on the start screen)</h2>
+ <div class="photos">${['Front','Top','Side'].map((l,i)=>`<label class="photo">${it.photos[i]?`<img src="${it.photos[i]}" alt="${l}">`:'📷'}<span>${l}${it.photos[i]?' ✔':''}</span><input type="file" accept="image/*" capture="environment" data-ph="${i}"></label>`).join('')}</div>
+ <button class="ok" data-act="saveitem">💾 Save</button>${it.isNew?'':'<button data-act="delitem">🗑 Delete</button>'}${back('items','Cancel')}`},
+settings(){const s=S.set;return `<h1>Settings</h1>
  <label for="sn">Blimp name</label><input type="text" id="sn" value="${esc(s.name)}">
  <label for="ts">Text size</label><input type="range" id="ts" min="1" max="1.4" step="0.1" value="${s.ts}">
  <label for="dm">Dim the screen</label><input type="range" id="dm" min="0" max="0.7" step="0.05" value="${s.dim}">
- <p class="note">To change the iPad’s own brightness, open Control Center and use the sun slider.</p>
- <button data-act="sound">${s.sound?'🔊 Sounds: ON':'🔇 Sounds: OFF'}</button>
- <label for="ad">Home base address (caregiver)</label><input type="text" id="ad" value="${esc(s.addr)}">
- <div class="card">Connection: 🟢 Connected (demo)</div>
- <h2>Caregiver tools</h2>
- <button data-go="setup">🗺 Setup Mode: Map the House</button>`},
-setup(){return `${back('settings')}<h1>Setup Mode</h1>
- <div class="card"><p>This is for a family member or caregiver. The blimp will fly slowly through each room to learn the layout of the house.</p>
- <p><b>Before you start:</b></p><p>✔ Open the doors<br>✔ Move cords and loose items off the floor<br>✔ Keep pets and people clear</p></div>
- ${S.map.done?'<div class="card">✔ A map is already saved. Mapping again will replace it.</div>':''}
- <button class="pri" data-act="startmap">▶ Start Mapping</button>`},
-mapping(){const m=S.map;const cells=[];
- for(let i=0;i<160;i++)cells.push(`<i class="${i===m.last?'me':m.cells[i]?'on':''}"></i>`);
- return `<h1>Mapping the house</h1><p>${m.run?'The blimp is flying. Please stay clear.':'Paused.'}</p>
- <div class="map">${cells.join('')}</div>
- <div class="bar"><div style="width:${m.pct}%"></div></div><p><b>${m.pct}% mapped</b></p>
- <button class="pri" data-act="finishmap">✔ Finish and Save</button>
- <div class="row">${LIVE.on?'':`<button data-act="pausemap">${m.run?'⏸ Pause':'▶ Resume'}</button>`}<button data-act="cancelmap">✖ Cancel</button></div>`},
-rooms(){return `<h1>Name the rooms</h1><p>Rooms help the blimp say where your item is.</p>
- ${['Kitchen','Living room','Bedroom'].map((r,i)=>`<label for="r${i}">Room ${i+1}</label><input type="text" id="r${i}" value="${r}">`).join('')}
- <button class="pri" data-act="saverooms">💾 Save Map</button>`}
+ <p class="note">To change the iPad’s own brightness, use Control Center.</p>${back('care')}`},
+setup(){return `<h1>Map the house</h1><div class="card"><p>The blimp will fly slowly through each room to learn the layout. Open doors, move cords off the floor, and keep pets and people clear.</p></div>
+ ${S.map.done?'<div class="card">✔ A map is already saved. Mapping again will replace it.</div>':''}<button class="pri" data-act="startmap">▶ Start mapping</button>${back('care')}`},
+mapping(){const m=S.map,c=[];for(let i=0;i<160;i++)c.push(`<i class="${i===m.last?'me':m.cells[i]?'on':''}"></i>`);
+ return `<h1>Mapping the house</h1><p>${m.run?'The blimp is flying. Please stay clear.':'Paused.'}</p><div class="map">${c.join('')}</div><div class="bar"><div style="width:${m.pct}%"></div></div><p><b>${m.pct}% mapped</b></p>
+ <button class="ok" data-act="finishmap">✔ Finish and save</button><div class="row">${LIVE.on?'':`<button data-act="pausemap">${m.run?'⏸ Pause':'▶ Resume'}</button>`}<button data-act="cancelmap">✖ Cancel</button></div>`},
+rooms(){return `<h1>Name the rooms</h1>${['Kitchen','Living room','Bedroom'].map((r,i)=>`<label for="r${i}">Room ${i+1}</label><input type="text" id="r${i}" value="${r}">`).join('')}<button class="ok" data-act="saverooms">💾 Save map</button>`}
 };
-function render(){
- const f=V[S.screen]||V.home;
- if(S.screen==='edit'&&!S.edit)S.screen='items';
- $('#main').innerHTML=(V[S.screen]||V.home)();
- $('#main').scrollTop=0;status();
- document.documentElement.style.setProperty('--ts',S.set.ts);
- $('#dim').style.opacity=S.set.dim;
-}
+function when(f){try{return new Date(f.time).toLocaleString([],{weekday:'short',hour:'numeric',minute:'2-digit'})+(f.room?' in the '+f.room:'')}catch(e){return ''}}
+function status(){let t='🟢 Ready';
+ if(S.paused)t='🔴 Stopped';else if(S.screen==='search')t='🔵 Looking';else if(S.screen==='return')t='🔵 Flying home';else if(S.screen==='mapping')t='🔵 Mapping';
+ $('#status').textContent=(LIVE.on&&!LIVE.ok?'⚠ Not connected':t+'  🔋 '+S.battery+'%')+(LIVE.on&&!LIVE.demo?'':'  (demo)');
+ $('#bname').textContent=S.set.name}
+const sig=()=>[S.screen,S.stage,S.ret,S.found,S.map.pct,S.noimg,S.items.length,S.page].join('|');
+function render(){const m=$('#main'),keep=S.screen===LAST?m.scrollTop:0;LAST=S.screen;
+ m.className=SCROLL.includes(S.screen)?'scroll':'';m.innerHTML=(V[S.screen]||V.home)();m.scrollTop=keep;SIG=sig();status();
+ document.documentElement.style.setProperty('--ts',S.set.ts);$('#dim').style.opacity=S.set.dim}
+function refresh(){if(sig()!==SIG)render();else status()}   // only redraws when something changed
 
-/* ---------- behaviours ---------- */
-function startSearchTimer(){stop();timer=setInterval(()=>{
- S.stage++;
- if(S.stage>=3){stop();S.found=true;S.where='is on the kitchen table';S.stage=3;S.screen='return';S.ret=0;render();setTimeout(()=>{if(S.screen==='return'&&!S.paused)startRetTimer()},1500);return}
- render()},2500)}
-function startRetTimer(){stop();timer=setInterval(()=>{S.ret++;if(S.ret>=3){stop()}render()},2500)}
-function beginReturn(found){S.found=found;S.ret=0;S.screen='return';render();if(LIVE.on){LIVE.last='RETURNING';api('/return_home',{}).catch(e=>notice('Problem',e.message))}else startRetTimer()}
-function startMapTimer(){stop();S.map.run=true;timer=setInterval(()=>{
- const m=S.map;if(m.pct>=100){stop();m.run=false;render();return}
- m.pct=Math.min(100,m.pct+4);
- const n=Math.floor(m.pct*1.6);
- for(let i=0;i<n;i++)m.cells[(Math.floor(i/16)%2===0)?i:Math.floor(i/16)*16+15-(i%16)]=1;
- m.last=Math.max(0,n-1);render()},700)}
-
-document.addEventListener('click',e=>{
- const b=e.target.closest('[data-go],[data-find],[data-edit],[data-act]');if(!b)return;
- if(b.dataset.go){go(b.dataset.go)}
- else if(b.dataset.find){S.sel=+b.dataset.find;S.stage=0;S.found=false;
-  if(LIVE.on){const it=S.items.find(i=>i.id===S.sel);
-   api('/search',{item_id:S.sel,name:it.name}).then(()=>{LIVE.last='SEARCHING';S.where=null;S.screen='search';render()}).catch(err=>notice('Can’t start the search',err.message))}
-  else{S.screen='search';render();startSearchTimer()}}
- else if(b.dataset.edit){const id=b.dataset.edit;
-  S.edit=id==='new'?{isNew:true,name:'',cat:'Everyday',photos:[null,null,null]}:JSON.parse(JSON.stringify(S.items.find(i=>i.id==id)));go('edit')}
- else act(b.dataset.act);
-});
+/* ---------- actions ---------- */
+function find(){S.stage=0;S.found=false;S.noimg=false;
+ if(LIVE.on)api('/search',{item_id:S.sel}).then(()=>{LIVE.last='SEARCHING';go('search')}).catch(e=>notice('I couldn’t start the search',e.message));
+ else{go('search');searchTimer()}}
+function searchTimer(){stop();timer=setInterval(()=>{S.stage++;if(S.stage>=3){stop();S.found=true;S.ft=Date.now();S.stage=3;S.ret=0;S.screen='return';render();startRet();return}refresh()},2500)}
+function startRet(){stop();timer=setInterval(()=>{S.ret++;if(S.ret>=3)stop();refresh()},2500)}
+function beginReturn(found){S.found=found;S.ret=0;S.screen='return';render();if(LIVE.on){LIVE.last='RETURNING';api('/return_home',{}).catch(e=>notice('Problem',e.message))}else startRet()}
+function fillMap(){const m=S.map,n=Math.floor(m.pct*1.6);for(let i=0;i<n;i++)m.cells[(Math.floor(i/16)%2===0)?i:Math.floor(i/16)*16+15-(i%16)]=1;m.last=Math.max(0,n-1)}
+function mapTimer(){stop();S.map.run=true;timer=setInterval(()=>{const m=S.map;if(m.pct>=100){stop();m.run=false;refresh();return}m.pct=Math.min(100,m.pct+4);fillMap();refresh()},700)}
+async function saveItemLive(it){
+ const body={name:it.name,cat:it.cat,model_class:it.model_class||'',notes:it.notes||''};
+ const saved=it.isNew?await api('/items',body):await api('/items/'+it.id,body,'PUT');
+ for(let i=0;i<3;i++)if(it.dirty&&it.dirty[i]){const blob=await (await fetch(it.photos[i])).blob();
+  const r=await fetch('/api/items/'+saved.id+'/photo/'+i,{method:'PUT',headers:{'Content-Type':'image/jpeg'},body:blob});if(!r.ok)throw new Error('A picture could not be saved.')}
+ S.items=await api('/items')}
 function act(a){
- if(a==='endsearch'){beginReturn(false)}
+ if(a==='yes')find();
+ else if(a==='endsearch')beginReturn(false);
  else if(a==='done'){S.found=false;go('home')}
  else if(a==='saveitem'){const it=S.edit;it.name=($('#nm').value||'').trim()||'New item';it.cat=$('#ct').value;if($('#mc'))it.model_class=$('#mc').value.trim();
-  if(LIVE.on){saveItemLive(it).then(()=>{S.edit=null;go('items')}).catch(e=>notice('Could not save',e.message))}
-  else{if(it.isNew){delete it.isNew;it.id=S.nid++;S.items.push(it)}else S.items=S.items.map(i=>i.id===it.id?it:i);
-  S.edit=null;go('items')}}
+  if(LIVE.on)saveItemLive(it).then(()=>{S.edit=null;go('items')}).catch(e=>notice('Could not save',e.message));
+  else{if(it.isNew){delete it.isNew;it.id=S.nid++;S.items.push(it)}else S.items=S.items.map(i=>i.id===it.id?it:i);S.edit=null;go('items')}}
  else if(a==='delitem'){if(confirm('Delete this item?')){
-  if(LIVE.on){api('/items/'+S.edit.id,undefined,'DELETE').then(()=>api('/items')).then(l=>{S.items=l;S.edit=null;go('items')}).catch(e=>notice('Could not delete',e.message))}
+  if(LIVE.on)api('/items/'+S.edit.id,undefined,'DELETE').then(()=>api('/items')).then(l=>{S.items=l;S.edit=null;go('items')}).catch(e=>notice('Could not delete',e.message));
   else{S.items=S.items.filter(i=>i.id!==S.edit.id);S.edit=null;go('items')}}}
- else if(a==='sound'){S.set.sound=!S.set.sound;render()}
  else if(a==='startmap'){S.map={cells:[],pct:0,run:false,done:S.map.done,last:-1};S.screen='mapping';render();
-  if(LIVE.on){LIVE.last='MAPPING';S.map.run=true;api('/setup/start',{}).catch(e=>notice('Problem',e.message))}else startMapTimer()}
- else if(a==='pausemap'){if(S.map.run){stop();S.map.run=false}else startMapTimer();render()}
+  if(LIVE.on){LIVE.last='MAPPING';S.map.run=true;api('/setup/start',{}).catch(e=>notice('Problem',e.message))}else mapTimer()}
+ else if(a==='pausemap'){if(S.map.run){stop();S.map.run=false}else mapTimer();render()}
  else if(a==='cancelmap'){stop();S.map.run=false;if(LIVE.on){LIVE.last='IDLE';api('/setup/finish',{})}go('setup')}
  else if(a==='finishmap'){stop();S.map.run=false;if(LIVE.on){LIVE.last='IDLE';api('/setup/finish',{})}go('rooms')}
- else if(a==='saverooms'){S.map.done=true;go('settings')}
-}
+ else if(a==='saverooms'){S.map.done=true;go('care')}}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go],[data-pick],[data-page],[data-edit],[data-act]');if(!b||b.disabled)return;
+ if(b.dataset.go)go(b.dataset.go);
+ else if(b.dataset.pick){S.sel=+b.dataset.pick;S.noimg=false;go('confirm')}
+ else if(b.dataset.page){S.page+=+b.dataset.page;render()}
+ else if(b.dataset.edit){const id=b.dataset.edit;S.edit=id==='new'?{isNew:true,name:'',cat:'Everyday',photos:[null,null,null]}:JSON.parse(JSON.stringify(S.items.find(i=>i.id==id)));go('edit')}
+ else act(b.dataset.act)});
 document.addEventListener('input',e=>{const t=e.target;
  if(t.id==='ts'){S.set.ts=+t.value;document.documentElement.style.setProperty('--ts',t.value)}
  else if(t.id==='dm'){S.set.dim=+t.value;$('#dim').style.opacity=t.value}
- else if(t.id==='sn')S.set.name=t.value;
- else if(t.id==='ad')S.set.addr=t.value;
- else if(t.id==='nm'&&S.edit)S.edit.name=t.value;
-});
+ else if(t.id==='sn'){S.set.name=t.value;$('#bname').textContent=t.value}
+ else if(t.id==='nm'&&S.edit)S.edit.name=t.value});
 document.addEventListener('change',e=>{const t=e.target;
  if(t.id==='ct'&&S.edit)S.edit.cat=t.value;
  if(t.dataset&&t.dataset.ph!==undefined&&t.files[0]&&S.edit){
@@ -234,43 +188,46 @@ document.addEventListener('change',e=>{const t=e.target;
    c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
    S.edit.photos[i]=c.toDataURL('image/jpeg',0.8);(S.edit.dirty=S.edit.dirty||[])[i]=true;URL.revokeObjectURL(url);
    S.edit.name=($('#nm')||{}).value||S.edit.name;const mc=$('#mc');if(mc)S.edit.model_class=mc.value;render()};
-  img.src=url}
-});
+  img.src=url}});
+addEventListener('resize',()=>{if(S.screen==='home')render()});
 
-/* ---------- emergency stop ---------- */
-const hold=$('#hold'),fill=$('#fill');let t0=0,hi=null;
-function cancelHold(){clearInterval(hi);hi=null;fill.style.width='0'}
-hold.addEventListener('pointerdown',e=>{e.preventDefault();if(hi)return;t0=Date.now();
- hi=setInterval(()=>{const p=Math.min(1,(Date.now()-t0)/2000);fill.style.width=p*100+'%';
-  if(p>=1){cancelHold();confirmStop()}},40)});
-['pointerup','pointerleave','pointercancel'].forEach(ev=>hold.addEventListener(ev,cancelHold));
-hold.addEventListener('contextmenu',e=>e.preventDefault());
-function modal(html){$('#mbox').innerHTML=html;$('#modal').style.display='flex'}
-function closeModal(){$('#modal').style.display='none'}
-function confirmStop(){modal(`<h1>Stop the blimp?</h1><p>It will stop moving and hold still.</p>
- <button class="dng" id="yes">⛔ Yes, Stop Now</button><button id="no">No, Keep Going</button>`);
+/* ---------- press-and-hold (emergency stop, caregiver) ---------- */
+function holdStart(el,ms,done){holdEnd();const t0=Date.now();
+ H={el,iv:setInterval(()=>{const p=Math.min(1,(Date.now()-t0)/ms);el.style.setProperty('--p',p*100+'%');if(p>=1){holdEnd();done()}},40)}}
+function holdEnd(){if(H){clearInterval(H.iv);H.el.style.setProperty('--p','0%');H=null}}
+document.addEventListener('pointerdown',e=>{const h=e.target.closest('#hold,#cg');if(!h)return;e.preventDefault();
+ holdStart(h,h.id==='hold'?2000:3000,h.id==='hold'?confirmStop:()=>go('care'))});
+['pointerup','pointercancel'].forEach(v=>document.addEventListener(v,holdEnd));
+document.addEventListener('pointerout',e=>{if(H&&e.target===H.el)holdEnd()});
+document.addEventListener('contextmenu',e=>{if(e.target.closest('#hold,#cg'))e.preventDefault()});
+function confirmStop(){modal(`<h1>Stop the blimp?</h1><p class="msg">It will stop and hold still.</p><button class="dng" id="yes" style="background:var(--dng);color:var(--ondng)">⛔ Yes, stop it</button><button id="no">No, keep going</button>`);
  $('#yes').onclick=doStop;$('#no').onclick=closeModal}
-function doStop(){stop();if(LIVE.on){LIVE.last='ESTOPPED';api('/estop',{}).catch(e=>notice('The stop may not have worked',e.message))}S.paused={screen:S.screen,map:S.map.run};if(S.map.run)S.map.run=false;status();
- modal(`<h1>🔴 Blimp stopped</h1><p>It is holding still. What would you like to do?</p>
- <button class="pri" id="rh">🏠 Return Home (recommended)</button>
- <button id="rs">▶ Resume</button><button id="po">⏻ Power Off Blimp</button>`);
+function doStop(){stop();if(LIVE.on){LIVE.last='ESTOPPED';api('/estop',{}).catch(e=>notice('The stop may not have worked',e.message))}
+ S.paused={screen:S.screen,map:S.map.run};S.map.run=false;status();
+ modal(`<h1>🔴 The blimp has stopped</h1><p class="msg">It is safe. What would you like to do?</p>
+ <button class="pri" id="rh">🏠 Bring it home</button><button id="rs">▶ Keep going</button><button id="po">⏻ Turn it off</button>`);
  $('#rh').onclick=()=>{closeModal();S.paused=null;beginReturn(false)};
  $('#rs').onclick=()=>{const p=S.paused;S.paused=null;closeModal();
-  if(LIVE.on){LIVE.last=null;api('/resume',{}).catch(e=>notice('Problem',e.message))}else if(p.screen==='search')startSearchTimer();else if(p.screen==='return'&&S.ret<3)startRetTimer();else if(p.screen==='mapping'&&p.map)startMapTimer();render()};
+  if(LIVE.on){LIVE.last=null;api('/resume',{}).catch(e=>notice('Problem',e.message))}
+  else if(p.screen==='search')searchTimer();else if(p.screen==='return'&&S.ret<3)startRet();else if(p.screen==='mapping'&&p.map)mapTimer();render()};
  $('#po').onclick=()=>{S.paused=null;if(LIVE.on){LIVE.last='IDLE';api('/power_off',{})}closeModal();S.found=false;go('home');
-  modal(`<h1>Blimp is off</h1><p>Place it on the dock and turn it on to use it again.</p><button class="pri" id="ok">OK</button>`);$('#ok').onclick=closeModal}}
+  notice('The blimp is off','Put it on the dock and turn it on to use it again.')}}
+
+/* ---------- live connection to the home base ---------- */
 async function poll(){
  try{const d=await api('/status');LIVE.ok=true;LIVE.demo=d.demo;S.battery=d.battery;
-  const first=LIVE.last===undefined;
+  const first=LIVE.last===undefined,prev=LIVE.last;
   if(d.mode!==LIVE.last){LIVE.last=d.mode;
    if(d.mode==='SEARCHING')S.screen='search';
-   else if((d.mode==='RETURNING'||d.mode==='DOCKED')&&!first)S.screen='return';
+   else if(d.mode==='RETURNING'&&!first&&prev!=='DOCKED')S.screen='return';
    else if(d.mode==='MAPPING'){S.screen='mapping';S.map.run=true}
    else if(d.mode==='ESTOPPED'&&!S.paused)doStop()}
   if(d.mode==='SEARCHING')S.stage=d.stage;
-  if(d.mode==='RETURNING'||d.mode==='DOCKED'){S.ret=d.mode==='DOCKED'?3:d.stage;if(d.found&&!S.found){S.found=true;S.where=null;S.ft=Date.now();S.noimg=false;api('/items').then(l=>{S.items=l}).catch(()=>{})}}
+  if(d.mode==='RETURNING'||d.mode==='DOCKED'){S.ret=d.mode==='DOCKED'?3:d.stage;
+   if(d.found&&!S.found){S.found=true;S.ft=Date.now();S.noimg=false;api('/items').then(l=>{S.items=l}).catch(()=>{})}}
   if(d.mode==='MAPPING'){S.map.pct=d.map_pct;fillMap()}
-  if(['search','return','mapping'].includes(S.screen))render();else status();
+  LIVE.idle=d.mode==='IDLE'?LIVE.idle+1:0;
+  if(LIVE.idle>=2&&!S.paused&&['search','return','mapping'].includes(S.screen)){S.screen='home';S.found=false;render()}else refresh()
  }catch(e){LIVE.ok=false;status()}}
 (async()=>{try{const d=await api('/status');LIVE.on=true;LIVE.demo=d.demo;
  try{LIVE.classes=await api('/classes')}catch(e){}

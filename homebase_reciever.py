@@ -16,10 +16,11 @@ if cv2 is None:
     )
 
 import numpy as np
+import shutil
 import threading
 from queue import Queue, Empty
 from textwrap import fill
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from ultralytics import YOLO
 
 # ----------------------------------
@@ -41,8 +42,16 @@ detection_status = {
 target = {
     "class_id": None,
     "name": None,
-    "conf": 0.5
+    "conf": 0.5,
+    "epoch": 0      # goes up on every POST /target, so each search starts fresh
 }
+
+# Newest cropped photo of the found item (kept in memory only, never saved to disk)
+found_image_lock = threading.Lock()
+found_image = {"jpeg": None}
+
+# Reference photos sent from the iPad app, stored per item id
+REFERENCE_DIR = Path(__file__).resolve().parent / "reference_images"
 
 # Keep only the newest unprocessed image
 image_queue = Queue(maxsize=1)
@@ -172,12 +181,45 @@ def set_target():
         target.update(
             class_id=match[0],
             name=match[1],
-            conf=confidence
+            conf=confidence,
+            epoch=target["epoch"] + 1
         )
         with status_lock:
             detection_status["target_found"] = False
 
+    # A new search starts: forget the previous found photo
+    with found_image_lock:
+        found_image["jpeg"] = None
+
     return jsonify(status="ok", target=match[1]), 200
+
+
+@app.route("/found_image", methods=["GET"])
+def get_found_image():
+    with found_image_lock:
+        jpeg = found_image["jpeg"]
+    if jpeg is None:
+        return jsonify(error="No image yet"), 404
+    return Response(jpeg, mimetype="image/jpeg")
+
+
+@app.route("/reference/<int:item_id>/<int:slot>", methods=["PUT"])
+def put_reference(item_id, slot):
+    if slot not in (0, 1, 2):
+        return jsonify(error="Slot must be 0, 1 or 2"), 400
+    data = request.get_data()
+    if request.mimetype != "image/jpeg" or not data.startswith(b"\xff\xd8"):
+        return jsonify(error="Expected JPEG"), 400
+    folder = REFERENCE_DIR / str(item_id)
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / f"{slot}.jpg").write_bytes(data)
+    return jsonify(status="saved"), 200
+
+
+@app.route("/reference/<int:item_id>", methods=["DELETE"])
+def delete_reference(item_id):
+    shutil.rmtree(REFERENCE_DIR / str(item_id), ignore_errors=True)
+    return jsonify(status="deleted"), 200
 
 
 # ----------------------------------
@@ -198,7 +240,7 @@ print("Press Q to quit")
 
 show_other_objects = False
 target_was_found = False
-previous_target = (None, None, None)
+previous_target = (None, None, None, -1)
 display_window_open = False
 
 
@@ -232,18 +274,22 @@ while True:
     # ----------------------------------
 
     results = yolo(frame, verbose=False)[0]
+    clean_frame = frame.copy()   # untouched copy, taken before boxes are drawn
 
     object_count = 0
     target_confidence = 0.0
+    target_box = None
     with target_lock:
         target_class_id = target["class_id"]
         target_name = target["name"]
         confidence_threshold = target["conf"]
+        target_epoch = target["epoch"]
 
     frame_target = (
         target_class_id,
         target_name,
-        confidence_threshold
+        confidence_threshold,
+        target_epoch
     )
     if frame_target != previous_target:
         target_was_found = False
@@ -263,9 +309,9 @@ while True:
         )
 
         if is_target:
-            target_confidence = max(
-                target_confidence, conf
-            )
+            if conf > target_confidence:
+                target_confidence = conf
+                target_box = tuple(map(int, box.xyxy[0]))
 
         elif not show_other_objects:
             continue
@@ -308,18 +354,45 @@ while True:
         and target_confidence >= confidence_threshold
     )
 
+    # Prepare a tight crop of the found object (only on a new detection).
+    pending_crop = None
+    if target_found and not target_was_found and target_box is not None:
+        bx1, by1, bx2, by2 = target_box
+        ih, iw = clean_frame.shape[:2]
+        # Crop a comfortable 4:3 area around the object (at least 240x180 and
+        # at least twice the object's size), kept inside the frame.
+        cw = max(240, int((bx2 - bx1) * 2))
+        ch = max(180, int((by2 - by1) * 2), int(cw * 3 / 4))
+        cw = max(cw, int(ch * 4 / 3))
+        cw, ch = min(cw, iw), min(ch, ih)
+        cx, cy = (bx1 + bx2) // 2, (by1 + by2) // 2
+        x0 = min(max(0, cx - cw // 2), iw - cw)
+        y0 = min(max(0, cy - ch // 2), ih - ch)
+        crop = clean_frame[y0:y0 + ch, x0:x0 + cw]
+        encoded_ok, crop_buffer = cv2.imencode(
+            ".jpg", crop, [cv2.IMWRITE_JPEG_QUALITY, 85]
+        )
+        if encoded_ok:
+            pending_crop = crop_buffer.tobytes()
+
     target_event = False
     with target_lock:
         current_target = (
             target["class_id"],
             target["name"],
-            target["conf"]
+            target["conf"],
+            target["epoch"]
         )
         if current_target == frame_target:
             with status_lock:
                 detection_status["target_found"] = target_found
 
                 if target_found and not target_was_found:
+                    # Store the photo BEFORE event_id goes up, so the UI
+                    # never sees a new event without its picture.
+                    if pending_crop is not None:
+                        with found_image_lock:
+                            found_image["jpeg"] = pending_crop
                     detection_status["event_id"] += 1
                     target_event = True
                     print(
