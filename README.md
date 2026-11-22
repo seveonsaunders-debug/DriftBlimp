@@ -18,21 +18,24 @@ python trainer.py
 
 Training uses CUDA device 0 and saves run results under `detect/`. An
 interrupted run for the same dataset is resumed automatically, with up to
-three retry attempts for training errors. After successful training,
-`trainer.py` registers that run's `best.pt` in the local `active_model.txt`
-file. Run `python vision.py` to load that model; the dataset path does not need
-to be changed in `vision.py`.
+three retry attempts for training errors.
 
-To select a different existing checkpoint without changing code, edit
-`active_model.txt` and set it to the checkpoint path relative to this
-directory, for example:
+Run `vision.py` with the trained `.pt` file as a path relative to the current
+directory:
 
-```text
-detect/elastic-robin2-9bb63ef8/weights/best.pt
+```powershell
+python vision.py detect/elastic-robin2-9bb63ef8/weights/best.pt
 ```
 
-`vision.py` loads the selected checkpoint and uses its class names. The file
-path must point to an existing `.pt` model.
+For example, if you are in `DriftBlimp` and the model is `glasses.pt`, run:
+
+```powershell
+python vision.py glasses.pt
+```
+
+You can also run `python vision.py` without an argument and enter the model
+path at the prompt. Relative paths are resolved from the directory where the
+command is run.
 
 The camera script prints the trained model's class names and prompts for a
 class name and minimum confidence. Matching is case-insensitive and uses the
