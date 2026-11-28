@@ -1,5 +1,12 @@
 {
     "inlineChat.affordance": "editor",
     "python-envs.defaultEnvManager": "ms-python.python:venv",
-    "python-envs.defaultPackageManager": "ms-python.python:pip"
+    "python-envs.defaultPackageManager": "ms-python.python:pip",
+    "liveServer.settings.https": {
+    "enable": true,
+    "cert": "C:\\secret\\cert.pem",
+    "key": "C:\\secret\\key.pem",
+    "passphrase": ""
+
+    }
 }
