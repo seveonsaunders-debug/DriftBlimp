@@ -3,15 +3,30 @@
 import cv2
 from ultralytics import YOLO
 
-cap = cv2.VideoCapture(0) # set source camera
-ret,frame = cap.read() # captures a single frame
+cv2.namedWindow("preview")
 
-while(True):
-    cv2.imshow('img1',frame) # display frame
-    if cv2.waitKey(1) & 0xFF == ord('s'): # press 's' to save frame
-        cv2.imwrite('img1.jpg',frame) # save frame
+vc = cv2.VideoCapture(0)
+
+if vc.isOpened():  # try to get the first frame
+    rval, frame = vc.read()
+else:
+    rval = False
+
+while rval:
+    cv2.imshow("preview", frame)
+    rval, frame = vc.read()
+    key = cv2.waitKey(20)
+    if key == 27:  # exit on ESC
+        cv2.destroyWindow("preview")
+        vc.release()
         break
-cap.release() # release camera
+    elif key == ord('c'):  # capture image
+        cv2.imshow("captured",frame) # shows captured image in new window
+        if key == ord('s'): # save image
+            cv2.imwrite("captured_image.jpg", frame)
+            print("Image saved")
+            break
 
 
-model = yolo('glasses.pt') # load yolo model
+cv2.destroyWindow("preview")
+vc.release()
